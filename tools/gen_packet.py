@@ -40,11 +40,15 @@ def pack_uint(name, value, width):
 
     if value < 0 or value > max_value:
         raise ValueError(
-            f"{name}={value} does not fit in {width} bits "
+            f"{name}={value} doesn't fit in {width} bits "
             f"(max={max_value})"
         )
-
-    return f"{value:0{width}b}"
+    """
+    Converts to binary
+    0 - if the value doesn't fill up the whole width, it pads leftmost empty spaces
+    with zeros
+    """
+    return f"{value:0{width}b}" 
 
 
 # Pack each field into a binary string and concatenate them in packet order
@@ -69,6 +73,7 @@ assert len(packet_bits) == PACKET_W
 packet_int = int(packet_bits, 2)
 packet_hex = f"{packet_int:062x}"
 
+# Hex is easier to copy into a tb
 print("packet width:", len(packet_bits))
 print("packet bits:", packet_bits)
 print("packet hex:", packet_hex)
