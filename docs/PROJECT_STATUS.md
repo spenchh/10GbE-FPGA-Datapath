@@ -1,6 +1,29 @@
 # Project Checkpoint
 
-Updated: 2026-09-21. This is the durable entry point for resumed work.
+Updated: 2026-09-30. This is the durable entry point for resumed work.
+
+## Latest Procurement Planning
+
+- Added `docs/BOM.md` and `docs/BOM.csv` for the USD 1,000 hardware budget.
+- User owns no FPGA and expects to develop on the existing laptop. Local model
+  identification and HP documentation establish a 5 Gb/s USB-C connection, not
+  USB4/Thunderbolt; do not recommend a Thunderbolt 10G adapter for that laptop.
+- Proposed physical lab: laptop for development, borrowed/refurbished Linux SFF
+  PC with a PCIe X520-DA2, passive SFP+ DAC and KR260. Listed-price plan totals
+  USD 931.92 including optional spare card and a USD 100 reserve. Not ordered.
+- Public specifications/prices were researched September 30. The DAC/card/board
+  pairing, board constraints and sustained packet-generation rate remain untested.
+- Vivado licensing changed in 2026.1; confirm actual kit entitlement or a supported
+  older Standard release, and separately resolve the Ethernet MAC license.
+- One KR260 SFP+ link permits two logical feeds at 10G aggregate, not two physical
+  10G inputs. The proposed dual-feed/recovery specialization is not implemented.
+- Documentation only: no RTL changes, FPGA tests, purchases, commit or push.
+- Checks passed: 13 CSV rows parsed, unique item IDs, USD 931.92 total, 16
+  Markdown source references resolved, no checked personal identifiers in BOM,
+  and `git diff --check`. These are document checks, not hardware validation.
+- Next procurement step: check advisor loaner equipment, validate MAC/PCS and
+  clock/pin/license choices before non-returnable purchases. Implementation can
+  proceed now with the first decoder and cocotb tests described below.
 
 ## Implementation Status
 
@@ -10,7 +33,7 @@ Updated: 2026-09-21. This is the durable entry point for resumed work.
   132 planned edge-case entries and 11 milestones totaling about 520 planned hours.
 - The FPGA design, post-route timing and hardware performance remain unverified.
 
-## Current Session
+## Guide Integration (2026-09-21)
 
 The guide was integrated into this repository on 2026-09-21. It uses standalone
 local development and production commands. Private hosting registration,
@@ -50,7 +73,8 @@ registered result after the accepting edge settles in simulation.
 - Finite buffers, sequence gaps, state freshness, pending-order exposure and
   feedback races need explicit behavior and tests.
 - Portable cocotb/Verilator tests and four-state/vendor-model tests are separate lanes.
-- Research source dates remain 2026-09-07. Recheck changing facts when acting on them.
+- Guide research source dates remain 2026-09-07; the separate BOM was refreshed
+  2026-09-30. Recheck changing facts when acting on them.
 
 ## Run the Guide
 
