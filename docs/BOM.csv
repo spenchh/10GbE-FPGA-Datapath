@@ -1,0 +1,14 @@
+item_id,category,item,quantity,unit_usd,price_basis,source_url,notes
+H01,hardware,AMD SK-KR260-G complete starter kit,1,431.02,Observed listing,https://www.digikey.com/en/products/detail/amd/SK-KR260-G/16521660,Recheck delivered price and license path; listed non-returnable
+H02,hardware,Dell OptiPlex 7060 SFF i5-8500 16GB 256GB refurbished,1,299.00,Observed listing example,https://www.target.com/p/-/A-1004161493,Borrow if possible; not Micro; free x16 slot and low-profile NIC clearance
+H03,hardware,Intel X520-DA2 refurbished low-profile NIC,1,29.00,Observed listing,https://www.stikc.com/products/intel-x520-da2-dual-port-10gb-sfp-cna-low-profile,Confirm exact OEM card and return terms; verify Linux driver and DAC
+H04,hardware,10Gtek CAB-10GSFP-P1M-24 passive DAC Intel-compatible option,1,20.90,Displayed vendor listing,https://www.sfpcables.com/SFP-Cable-CAB-10GSFP-P1M-24?source=10gtekProductPage,Requote shipping; complete FPGA pairing untested; no separate optics needed
+H05,accessory,USB-A microSD reader,1,12.00,Planning estimate,,Skip if already owned
+H06,accessory,USB flash drive 16GB or larger for Linux installer,1,10.00,Planning estimate,,Reuse existing drive only after backing up its contents
+H07,accessory,Nonconductive board support and ESD supplies,1,20.00,Planning estimate,,Keep cooling unobstructed
+H08,optional,Spare 32GB microSDHC card,1,10.00,Planning estimate,,Included in total but optional because starter kit contains a card
+R01,reserve,Tax shipping and price contingency,1,100.00,Budget reserve,,Not a checkout quote; do not exceed total budget
+B01,borrow,Initial setup monitor keyboard mouse display cable and screwdriver,1,0.00,Borrow assumed,,If unavailable add actual cost before buying
+I01,included,KR260 power supply fansink microSD USB debug cable and RJ45 cable,1,0.00,Included with complete kit,https://docs.amd.com/r/en-US/ug1092-kr260-starter-kit/What-s-in-the-Box,Verify seller supplies full kit; do not double count
+S01,software,Python pytest cocotb Verilator C++ build tools and waveform viewer,1,0.00,Open-source baseline,https://docs.cocotb.org/en/stable/simulator_support.html,Pin supported released versions; not installed or tested by BOM work
+S02,software,Vivado and Ethernet MAC implementation,1,0.00,Conditional no-paid-license assumption,https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/licensing-faq.html,See BOM.md; paid MAC or tool licenses excluded and could invalidate budget
