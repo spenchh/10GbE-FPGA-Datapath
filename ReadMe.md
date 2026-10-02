@@ -15,22 +15,6 @@ No FPGA line-rate, latency, synthesis or hardware-validation result is claimed.
 See [the progress checkpoint](docs/PROJECT_STATUS.md) for current evidence and
 the next task.
 
-## Explore the Guide on Your Computer
-
-Install Node.js 24, then from the repository root:
-
-```powershell
-cd guide
-npm ci
-npm run dev
-```
-
-Open the localhost address printed in the terminal. The website runs in your own
-browser; no ChatGPT account is required. Keep the terminal open while using it.
-
-The [guide README](guide/README.md) contains production-start and check commands.
-You can also read the [project handbook](guide/public/project-handbook.md) directly
-on GitHub without running the website.
 
 ## Planned Data Path
 
