@@ -21,14 +21,14 @@ module market_data_decoder (
   output logic [63:0] o_timestamp 
 );
 
-assign incoming_message_type        = i_packet_in[247:240];
-assign incoming_sequence_number     = i_packet_in[239:208];
-assign incoming_symbol_id           = i_packet_in[207:192];
-assign incoming_bid_price           = i_packet_in[191:160];
-assign incoming_ask_price           = i_packet_in[159:128];
-assign incoming_bid_size            = i_packet_in[127:96];
-assign incoming_ask_size            = i_packet_in[95:64];
-assign incoming_timestamp           = i_packet_in[63:0];
+assign [7:0]  incoming_message_type        = i_packet_in[247:240];
+assign [31:0] incoming_sequence_number     = i_packet_in[239:208];
+assign [15:0] incoming_symbol_id           = i_packet_in[207:192];
+assign [31:0] incoming_bid_price           = i_packet_in[191:160];
+assign [31:0] incoming_ask_price           = i_packet_in[159:128];
+assign [31:0] incoming_bid_size            = i_packet_in[127:96];
+assign [31:0] incoming_ask_size            = i_packet_in[95:64];
+assign [63:0] incoming_timestamp           = i_packet_in[63:0];
 
 logic packet_acceptable;
 /*
