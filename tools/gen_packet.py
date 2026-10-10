@@ -10,7 +10,7 @@ ask_size = 500
 timestamp = 123456789
 
 # Field widths in bits
-# These have to match the packet format  the sv decoder expects
+# These have to match the packet format the sv decoder expects
 MESSAGE_TYPE_W = 8
 SEQUENCE_NUMBER_W = 32
 SYMBOL_ID_W = 16
