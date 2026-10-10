@@ -32,11 +32,6 @@ Python/cocotb reference models and tests, C++ replay/control software, and
 Tcl/XDC build and timing checks support the RTL. The first packet format is
 synthetic; Nasdaq ITCH/OUCH compatibility is a possible later extension.
 
-## First Implementation Milestone
-
-Write and test the registered 248-bit decoder. Define its reset, idle, accept and
-reject behavior first; then check known vectors, field boundaries, rejected
-quotes and consecutive valid packets using cocotb and a compatible simulator.
 
 ## Repository Layout
 
