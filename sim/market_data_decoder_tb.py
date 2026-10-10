@@ -84,3 +84,5 @@ async def test(dut):
     assert int(dut.o_bid_size.value)        == 800, "bid_size invalid"
     assert int(dut.o_ask_size.value)        == 500, "ask_size invalid"
     assert int(dut.o_timestamp.value)       == 123456789, "timestamp invalid"
+
+    await FallingEdge(dut.i_clk)
