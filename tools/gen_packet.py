@@ -70,7 +70,7 @@ assert len(packet_bits) == PACKET_W
 
 # Convert binary string to an integer, then print it as hex
 # 248 bits / 4 = 62 hex digits
-packet_int = int(packet_bits, 2)
+packet_int = int(packet_bits, 2) # Base 2
 packet_hex = f"{packet_int:062x}"
 
 # Hex is easier to copy into a tb
