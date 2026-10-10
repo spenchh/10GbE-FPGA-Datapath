@@ -16,6 +16,8 @@ Goal: Prove reset clears decoder correctly
 """
 @cocotb.test(timeout_time=1, timeout_unit="us") # Max sim time allowed for test
 async def test(dut):
+
+    # RESET CHECK
     # drive all four inputs to their starting values
     dut.i_clk.value = 0
     dut.i_rst_n.value = 0
@@ -42,6 +44,7 @@ async def test(dut):
     assert int(dut.o_timestamp.value)       == 0, "timestamp invalid"
 
 
+    # PACKET CHECK
     await FallingEdge(dut.i_clk) # Wait for falling edge to drive inputs
 
     dut.i_rst_n.value        = 1
@@ -52,7 +55,7 @@ async def test(dut):
     await ReadOnly()
     
     # Check decoded outputs
-    assert int(dut.o_decoded_valid.value)   == 1, "decoded_valid did not clear"
+    assert int(dut.o_decoded_valid.value)   == 1, "decoded_valid did not assert"
     assert int(dut.o_decode_error.value)    == 0, "unexpected decode error"
     assert int(dut.o_message_type.value)    == 1, "message_type invalid"
     assert int(dut.o_sequence_number.value) == 42, "sequence_number mismatch"
@@ -63,3 +66,21 @@ async def test(dut):
     assert int(dut.o_ask_size.value)        == 500, "ask_size invalid"
     assert int(dut.o_timestamp.value)       == 123456789, "timestamp invalid"
 
+    # IDLE CYCLE CHECK (no new packets)
+    await FallingEdge(dut.i_clk)
+    dut.i_packet_valid.value = 0
+    dut.i_packet_in.value    = 0
+
+    await RisingEdge(dut.i_clk)
+    await ReadOnly()
+    
+    assert int(dut.o_decoded_valid.value)   == 0, "decoded_valid did not clear"   # no new decoded packet
+    assert int(dut.o_decode_error.value)    == 0, "unexpected decode error"       # no packet = no error
+    assert int(dut.o_message_type.value)    == 1, "message_type invalid"
+    assert int(dut.o_sequence_number.value) == 42, "sequence_number mismatch"
+    assert int(dut.o_symbol_id.value)       == 7, "symbol_id invalid"
+    assert int(dut.o_bid_price.value)       == 1743100, "bid_price invalid"
+    assert int(dut.o_ask_price.value)       == 1743300, "ask_price invalid"
+    assert int(dut.o_bid_size.value)        == 800, "bid_size invalid"
+    assert int(dut.o_ask_size.value)        == 500, "ask_size invalid"
+    assert int(dut.o_timestamp.value)       == 123456789, "timestamp invalid"
