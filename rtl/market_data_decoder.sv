@@ -50,7 +50,7 @@ assign packet_valid = (
 
 always_ff @(posedge i_clk) begin
   if (!i_rst_n) begin
-    o_valid           <= 0;
+    o_valid           <= '0;
     o_message_type    <= '0;
     o_sequence_number <= '0;
     o_symbol_id       <= '0;
