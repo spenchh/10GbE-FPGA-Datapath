@@ -18,7 +18,9 @@ module market_data_decoder(
   output logic [31:0]  o_ask_price,
   output logic [31:0]  o_ask_size,
   output logic [63:0]  o_timestamp,       // What time the quote was generated
-  output logic         o_valid   // outputs contain a decoded quote
+  
+  output logic         o_valid,           // outputs contain a decoded quote
+  output logic         o_decode_error
 );
 
 logic [ 7:0]  message_type;
@@ -33,22 +35,20 @@ logic         packet_valid;
 
 assign message_type    = i_payload [247 : 240];
 assign sequence_number = i_payload [239 : 208];
-assign symbol_id       = i_paylaod [207 : 192];
+assign symbol_id       = i_payload [207 : 192];
 assign bid_price       = i_payload [191 : 160];
-assign bid_size        = i_paylaod [159 : 128];
-assign ask_price       = i_payload [127 :  96];
-assign ask_size        = i_paylaod [95  :  64];
+assign ask_price       = i_payload [159 : 128];
+assign bid_size        = i_payload [127 :  96];
+assign ask_size        = i_payload [95  :  64];
 assign timestamp       = i_payload [63  :   0];
 
 assign packet_valid = (
-  (message_type = 8'd1) && // message type 1 = quote update
+  (message_type == 8'd1) && // message type 1 = quote update
   (bid_size != 32'd0) &&
   (ask_size != 32'd0) &&
   (bid_price <= ask_price)
-)
+);
 
-logic decode_error;
-logic decoded_valid;
 
 always_ff @(posedge i_clk) begin
   if (!i_rst_n) begin
@@ -61,11 +61,10 @@ always_ff @(posedge i_clk) begin
     o_ask_price       <= '0;
     o_ask_size        <= '0;
     o_timestamp       <= '0;
-    decode_error      <= '0;
+    o_decode_error      <= '0;
   end else begin
     if (i_valid) begin
-      decode_error <= 0;
-      decoded_valid <= 0;
+      o_decode_error <= 0;
       if (packet_valid) begin
         o_message_type    <= message_type;
         o_sequence_number <= sequence_number;
@@ -75,9 +74,14 @@ always_ff @(posedge i_clk) begin
         o_ask_price       <= ask_price;
         o_ask_size        <= ask_size;
         o_timestamp       <= timestamp;
-        decoded_valid <= 1'b1;
-      end else
-        decode_error <= 1'b1;
+        o_valid           <= 1'b1;
+      end else begin
+        o_decode_error      <= 1'b1;
+        o_valid           <= 1'b0;
+      end
+    end else begin
+      o_valid      <= 1'b0;
+      o_decode_error <= 1'b0; // clear during idle
     end
   end
 end
