@@ -47,6 +47,8 @@ assign packet_valid = (
   (bid_price <= ask_price)
 )
 
+logic decode_error;
+logic decoded_valid;
 
 always_ff @(posedge i_clk) begin
   if (!i_rst_n) begin
@@ -59,8 +61,11 @@ always_ff @(posedge i_clk) begin
     o_ask_price       <= '0;
     o_ask_size        <= '0;
     o_timestamp       <= '0;
+    decode_error      <= '0;
   end else begin
     if (i_valid) begin
+      decode_error <= 0;
+      decoded_valid <= 0;
       if (packet_valid) begin
         o_message_type    <= message_type;
         o_sequence_number <= sequence_number;
@@ -70,7 +75,9 @@ always_ff @(posedge i_clk) begin
         o_ask_price       <= ask_price;
         o_ask_size        <= ask_size;
         o_timestamp       <= timestamp;
-      end 
+        decoded_valid <= 1'b1;
+      end else
+        decode_error <= 1'b1;
     end
   end
 end
