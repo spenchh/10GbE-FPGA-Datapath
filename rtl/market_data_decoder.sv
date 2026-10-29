@@ -11,7 +11,7 @@ module market_data_decoder(
   input logic          i_valid,   // tells us when there is a new quote
 
   output logic [ 7:0]  o_message_type,    // What kind of message it is (type 1 = quote update)
-  output logic [31:0]  o_sequence_number, // Order of messages (detects gaps in the sequence of messages)
+  output logic [31:0]  o_sequence_number, // enables later logic to detect gaps
   output logic [15:0]  o_symbol_id,       // Which stock 
   output logic [31:0]  o_bid_price,
   output logic [31:0]  o_bid_size,
