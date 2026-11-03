@@ -1,138 +1,70 @@
-# 10GbE FPGA Lab Bill of Materials
+# VCU118 Market-Data Datapath Bill of Materials
 
-Researched: 2026-09-30. Budget: USD 1,000. No purchases made.
+Updated: 2026-11-03. Target board: AMD VCU118, kit EK-U1-VCU118-G.
 
-This is a procurement plan, not a tested hardware configuration. Listed prices
-are public-page snapshots, not delivered quotes. Check stock, shipping, tax,
-return conditions and the compatibility gates below before ordering.
+This is an equipment and software requirements list. The initial network setup is
+10GbE, with a separate 100GbE extension below. Board access, the exact cable/NIC
+combination, and the Ethernet implementation still need confirmation.
 
-## Recommendation
+## Hardware
 
-Keep the existing laptop for development. Use a refurbished Linux desktop with
-a PCIe SFP+ network card for traffic generation and capture, connected directly
-to a Kria KR260. Borrow the desktop from a university lab if possible.
+| Item | Quantity | Specification / purpose |
+| --- | ---: | --- |
+| VCU118 evaluation board | 1 | AMD EK-U1-VCU118-G, Virtex UltraScale+ XCVU9P platform. Record board revision and exact device marking. |
+| Board power and cooling | 1 set | Correct VCU118 kit supply and cooling assembly. The quick-start guide shows a 180 W supply. Verify the actual kit contents and board-specific connector. |
+| Development computer | 1 | Existing laptop for RTL, Python tests and small simulations. Use a lab build machine if VU9P implementation exceeds local resources. |
+| Linux traffic-generator PC | 1 | Native Linux desktop/server with an appropriate PCIe slot, NIC bracket clearance and airflow. The earlier Dell OptiPlex 7060 SFF is a 10G candidate, not a verified 100G replay host. |
+| 10G SFP+ NIC | 1 | Intel X520-DA2 or another supported 10GbE NIC. Confirm exact OEM version, driver and cable acceptance. |
+| 10G breakout cable | 1 | Short QSFP+ to 4x10G SFP+ DAC. QSFP end connects to a VCU118 cage; one SFP+ leg connects to the host NIC. Verify the selected FPGA lane and both endpoint requirements. |
+| USB data cables | 2 | Micro-USB cables for the VCU118's separate USB JTAG and USB UART connections. Inventory the kit before obtaining duplicates. |
+| Management Ethernet connection | 1 | Existing LAN/direct link for laptop-to-test-PC SSH and result transfer. The VCU118 RJ45 port is a separate 1G interface. |
+| Bench support and ESD supplies | 1 set | Nonconductive support with cooling unobstructed. |
+| Linux installer media | As needed | Reuse suitable USB media. |
+| Initial PC setup peripherals | As needed | Monitor, keyboard, mouse and display cable. |
+| QSFP loopback module | Optional | Useful for local bring-up if supplied with the kit. It does not replace the cable to the host. |
 
-The locally identified laptop is an HP Victus 15-fb3xxx. HP documents the series'
-USB-C connection as USB 3.2 Gen 1, 5 Gb/s, including Ryzen AI variants. It is not
-a USB4/Thunderbolt port. Do not buy a Thunderbolt/USB4 10G adapter for this machine.
-DisplayPort and USB Power Delivery support do not imply Thunderbolt support.
-See [HP specifications][hp-ports].
+[AMD's product page][vcu-kit] identifies the kit. [UG1224][vcu-guide] documents the
+board's FPGA, GTY connections, clocks and interfaces. The [quick-start guide][vcu-quick]
+shows the power and debug accessories. Inventory borrowed or secondhand equipment.
 
-The reported 16 GB RAM is sufficient to start small simulations, but full Vivado
-build memory use is design-dependent. Start with the existing machine, monitor
-memory, and use university compute if necessary. Approximately 465 GB free storage
-was reported; install only needed device families and manage waveform/build files.
-Neither a GPU upgrade nor a new development laptop is part of this BOM.
+The former KR260 boot-card/card-reader and single-SFP+ assumptions no longer apply.
+The VCU118 system-controller SoC is separate from the XCVU9P datapath FPGA. Its microSD
+interface does not make a card or board Linux image necessary for the initial RTL/JTAG demo.
 
-## Connections
+## 10GbE Connections
 
-```text
-Development laptop -- USB debug/UART --> KR260
-Development laptop -- 1G Ethernet ----> Linux test PC onboard Ethernet
-                                       |
-                                  PCIe X520-DA2
-                                       |
-                                10G SFP+ DAC
-                                       |
-                                KR260 SFP+ port
-```
+1. Connect the development computer to VCU118 USB JTAG for programming and USB UART for the chosen debug/control design.
+2. Connect the development computer to the Linux test PC through the existing LAN or a direct management Ethernet link.
+3. Install the 10G SFP+ NIC in the test PC.
+4. Connect one SFP+ breakout leg to the NIC and the QSFP+ end to the selected VCU118 cage.
+5. Configure the corresponding GTY lane, reference clock and MAC/PCS for 10GbE. Leave unused breakout legs disconnected.
+6. Power and cool the board using its correct kit hardware.
 
-The 10G link is full duplex: the PC transmits market-data packets and receives
-the FPGA's simulated order responses on the same cable. The laptop-to-PC link
-is for SSH, configuration and results, not the high-rate packet stream.
-Wi-Fi can remain the laptop's Internet connection. No 10G switch is required.
-The kit's included RJ45 cable can serve the laptop-to-PC connection; USB UART
-can handle initial board management. Additional shared-LAN cabling is optional.
+Design Gateway documents a [VCU118 10G breakout connection][vcu-10g]. This supports the
+connection approach, but does not verify our selected cable, NIC or custom RTL.
 
-## Purchase List
+The link is full duplex, so one selected 10G lane can carry market data to the FPGA
+and simulated responses back to the host. A breakout cable exposes separate lanes.
+It does not convert an active 100G Ethernet interface into 10G.
 
-Quantities are one each. CSV companion: [BOM.csv](BOM.csv).
+The laptop-to-PC connection carries SSH/control/results, not the high-rate packet stream.
+A 10G switch and a PCIe connection between the VCU118 and host are not required for this
+direct Ethernet setup. The on-board USB JTAG interface avoids a separate programming pod.
 
-| Item | Exact candidate or specification | USD allowance | Price basis / purpose |
-| --- | --- | ---: | --- |
-| FPGA starter kit | AMD **SK-KR260-G** complete kit | 431.02 | [DigiKey listing][kr260-dk]; programmable logic, Arm control processor, one 10G SFP+ port |
-| Traffic-generator PC | Refurbished **Dell OptiPlex 7060 SFF**, i5-8500, 16 GB RAM, 256 GB SSD, PSU/power cord included | 299.00 | [Listing example][pc-listing]; native Linux replay/capture host, not an FPGA |
-| 10G PCIe NIC | Refurbished **Intel X520-DA2**, low-profile bracket | 29.00 | [Stallard listing][nic-listing]; confirm exact OEM revision and return policy |
-| Direct-attach cable | **10Gtek CAB-10GSFP-P1M-24**, passive SFP+ to SFP+, 1 m, Intel-compatible option | 20.90 | [Vendor listing][dac]; pair compatibility still requires verification |
-| USB card reader | USB-A microSD/SD reader | 12.00 | Planning estimate; skip if already available |
-| Linux installer media | USB flash drive, 16 GB or larger | 10.00 | Planning estimate; can reuse an existing drive after backing it up |
-| Bench accessories | Nonconductive board support and ESD handling supplies | 20.00 | Planning estimate; keep fans unobstructed |
-| Spare boot card, optional | Reputable 32 GB microSDHC | 10.00 | Planning estimate; the kit already includes a card |
-| **Parts subtotal** | Includes optional spare card | **831.92** | Excludes tax and shipping |
-| Tax/shipping/price reserve | Budget allowance, not a quoted charge | 100.00 | Recalculate using actual checkout totals |
-| **Planned total** | | **931.92** | **68.08 remains** below the budget |
+## Compatibility and Bring-Up
 
-The PC listing is a price example, not an endorsement of that marketplace seller.
-Inspect condition, seller history, warranty, accessories and actual chassis photos.
-Do not pay for an unwanted Windows upgrade; this test host will run Linux.
-Borrowing an equivalent PC reduces the planned total to **632.92** using the same
-reserve. A cheaper local refurbished PC is useful only if its slot, cooling and
-complete configuration are suitable.
+- **Board identity:** record revision, device marking and matching board files/schematic. Select the exact installed part in Vivado.
+- **GTY lane and reference clock:** audit the selected QSFP cage, lane, clock source, reset and module-control pins against UG1224 and the chosen MAC/PCS example. A QSFP cage alone does not establish every operating mode.
+- **Breakout cable:** match the labeled leg to the FPGA lane selected by constraints. Confirm NIC-end coding/cable acceptance and any module power requirements. See [Intel X520 guidance][intel].
+- **Test host:** verify slot width, bracket and airflow. The original OptiPlex 7060 SFF candidate reserves its x16 slot for the NIC. Check the actual machine before adopting it.
+- **Build computer:** use the selected Vivado release's memory guidance and measured build usage for VU9P work. Use university compute if needed.
+- **Programming and link tests:** run board self-test, verify JTAG programming and clock/reset behavior, then build a minimal MAC/PCS link before integrating the market-data pipeline.
 
-AMD lists a **349.00 MSRP** and a **26-week lead time** on its [product page][kr260].
-DigiKey's US page returned **431.02** and **192 in stock**, with a
-non-cancelable/non-returnable notice, during this check. The BOM uses the higher
-actual listing rather than assuming MSRP is available. Stock and prices can change;
-confirm before purchase. No stock has been reserved.
+## Software and IP Requirements
 
-## Already Included or Borrowed
-
-[AMD's box inventory][box] lists the K26 SOM/carrier, fan/heatsink, power supply
-and adapters, RJ45 Ethernet cable, USB-A-to-micro-B cable, and microSD with adapter.
-Do not buy another PSU, fan, boot card or debug cable by default. The microSD-to-SD
-adapter is not a USB reader. Use the board's integrated USB debug connection;
-an external JTAG programming pod is not an initial requirement.
-
-Borrow a monitor with the correct cable/adapter, USB keyboard and mouse for initial
-Linux installation and recovery. A laptop's HDMI port is normally an output, not
-a monitor input. Run the PC headlessly over SSH afterward. If these cannot be
-borrowed, include their real cost before ordering: they are not priced in the total.
-Also borrow a screwdriver for the NIC installation. Confirm the PC power cord and
-all board kit accessories are actually included, especially with secondhand units.
-
-## Compatibility Gates Before Purchase
-
-1. **PC chassis and slot:** choose the SFF, not the similarly named Micro. Dell
-   specifies a PCIe 3.0 x16 slot for the [7060 SFF][pc-slots]. Reserve that slot
-   for the NIC, use integrated graphics, verify clearance and the low-profile
-   bracket. The X520 needs adequate chassis airflow. This is a candidate pairing,
-   not a claim that this exact refurbished machine has been tested.
-2. **NIC and cable:** confirm the actual card's OEM identity, Linux driver support,
-   EEPROM/firmware condition and DAC acceptance with the seller. Intel documents
-   required cable standards and identifier in its [X520 compatibility note][intel].
-   Buy a returnable short passive DAC matching those requirements. Intel-compatible
-   coding alone does not prove the entire FPGA link will work.
-3. **FPGA physical interface:** before a non-returnable board order, audit KR260
-   schematic revision, SFP+ transceiver routing, reference clock, power/control
-   signals and constraints against the selected 10G MAC/PCS design. Generate and
-   build a minimal link design. This board-specific port remains unverified.
-4. **License path:** establish a usable Vivado/device license and Ethernet MAC
-   implementation, as described below. A tool license is not automatically a MAC
-   license. Do not rely on an expiring evaluation core for the final demonstration.
-5. **Delivered total:** substitute the actual PC/NIC/cable and tax/shipping quotes.
-   If the total exceeds 1,000, borrow the PC or defer purchase. Do not silently
-   drop needed accessories or assume additional funds.
-
-AMD's tested peripheral list names the **10Gtek AXS85-192-M3 10GBASE-SR** module
-for its 10GigE Vision application. It does not verify our proposed DAC and RTL.
-See [supported peripherals][peripherals]. If using optics instead of a DAC, buy
-one board-side SR module, an Intel-validated host-side SR module, and a duplex
-LC-to-LC OM3 multimode cable. Rebudget this alternative; do not buy both paths.
-Intel warns of restrictions on third-party optics. Do not treat the board-side
-module as automatically approved for the Intel card.
-
-Avoid an RJ45 10GBASE-T SFP+ module as the default board connection: check module
-power explicitly against the KR260's **3.3 V, 600 mA** SFP+ allowance in
-[AMD's power budget][power]. A passive DAC needs no separate optical modules.
-
-## Software and IP Bill of Materials
-
-The baseline assumes no paid software purchases. These are requirements to set
-up and validate, not a statement that everything is installed or passing today.
-
-| Tool or dependency | Role | Cost / decision |
+| Tool or dependency | Role | Setup requirement |
 | --- | --- | --- |
-| SystemVerilog and editor | RTL, assertions and interfaces | No language license fee; use existing editor |
+| SystemVerilog and editor | RTL, assertions and interfaces | Use existing editor |
 | Python, venv, pytest | Packet codec, reference models, scenario generation and scoreboards | Open-source tooling; pin dependencies |
 | cocotb | Drive RTL and check cycle-by-cycle results from Python | Open source; select a released version |
 | Verilator and C++ compiler | Fast portable RTL simulation and lint | Open source; pin a supported cocotb/Verilator pair |
@@ -141,94 +73,79 @@ up and validate, not a statement that everything is installed or passing today.
 | Vivado, Tcl, XDC, hardware manager/ILA | Synthesis, constraints, implementation, timing and board debug | Version/device entitlement must be confirmed |
 | Four-state simulator lane | Reset/X behavior and vendor primitive models | Vivado xsim or institution-provided simulator; separate from portable Verilator tests |
 | GCC/Clang, CMake/Make, C++ | Native Linux packet replay, mock venue and capture utilities | Open source |
-| Linux, SSH, Git | Test host, reproducible scripts and version control | No paid OS required for the test PC |
+| Linux, SSH, Git | Test host, reproducible scripts and version control | Use a supported Linux distribution |
 | Wireshark/tshark, tcpdump/libpcap, ethtool | Packet inspection, capture and NIC configuration | Open source; disable/record offloads where test correctness requires it |
 | DPDK or another supported packet-I/O backend, later | Higher-rate replay if ordinary sockets cannot supply the required load | Optional integration work; verify NIC/driver support and measured rate |
-| Vitis / board Linux image, later | Arm-side configuration and telemetry | Add only when integrating the SoC control plane; match hardware/tool versions |
+| VCU118 controller utilities and custom UART host tools | Board clock setup, configuration and telemetry | Use VCU118 documentation. A KR260 Linux image is not applicable to the VU9P datapath. |
 | UVM, optional | Additional SystemVerilog verification methodology | Not required for this baseline; use a verified simulator and university license if necessary |
-| Market-data fixtures | Synthetic packets and fault scenarios first | No live exchange subscription required; review rights before adding historical data |
+| Market-data fixtures | Synthetic packets and fault scenarios first | Use synthetic fixtures first; review rights before adding historical data |
 
 The [cocotb simulator support page][cocotb] currently lists Verilator 5.036+.
 Because the stable URL returned development-version documentation, confirm the
 requirements for the exact released cocotb version chosen; do not install an
 arbitrary distribution package and assume compatibility.
 
-### Vivado and Ethernet License Decision
+### Vivado and Ethernet Entitlements
 
-- **Older supported route:** AMD's [Vivado 2025.1 device table][vivado-devices]
-  includes Kria in Standard Edition. The [licensing FAQ][licenses] says Standard
-  2025.2 and earlier does not require a FLEX license. Validate the chosen board
-  files, IP configuration and host OS against a pinned release before adopting it.
-- **2026.1 and newer:** the licensing model changed to tiers. AMD says Kria kits
-  receive a CORE voucher starting with 2026.1. Confirm the entitlement in the
-  actual kit, subscription duration and project-long access; do not assume an
-  older-stock box includes a new voucher or every feature is in free BASIC.
-- **Ethernet IP:** [PG210][ethernet-license] distinguishes no-purchase BASE-R
-  PCS/PMA from separately licensed MAC configurations. The 931.92 plan assumes
-  a suitable open-source MAC or confirmed institution-provided rights. A commercial
-  MAC license is **not included** in that number and could invalidate the budget.
-- **Open-source candidate:** [verilog-ethernet][open-mac] supplies MIT-licensed
-  10G MAC components, but is deprecated. An audited, pinned version is a candidate,
-  not a turnkey KR260 solution. Its successor has separate licensing to review.
-  Reuse the MAC/PHY infrastructure without replacing the intended custom
-  IPv4/UDP parser, decoder, feed handling and risk RTL with an entire copied stack.
+- Confirm a Vivado release and entitlement that can synthesize, implement and generate bitstreams for the exact XCVU9P device.
+- The historical VCU118 quick-start guide describes a node-locked, device-locked Design Edition voucher. A borrowed or used board does not establish an unused or transferable voucher. Verify the actual lab/kit license and permitted tool version.
+- AMD describes changed licensing tiers starting in 2026.1 on its [Vivado page][vivado]. Check current entitlement rather than assuming the historical voucher covers a newer release.
+- A device/tool entitlement does not establish Ethernet MAC/IP rights. Validate the chosen 10G MAC/PCS, and separately validate any 100G implementation. [PG210][ethernet-license] covers the 10G/25G subsystem.
+- The earlier [verilog-ethernet][open-mac] candidate needs version/license review and a VCU118-specific port. Reuse infrastructure while retaining the intended custom parser, decoder and research logic.
 
-## What This Lab Can and Cannot Establish
+## Optional 100GbE Extension
 
-This keeps the original architecture: Ethernet -> IPv4 -> UDP -> market data ->
+The VCU118 has two QSFP cages with four GTY lanes each. Moving from the initial
+single-lane 10G design to 100GbE requires a separate core and system configuration.
+
+| Requirement | Candidate / verification |
+| --- | --- |
+| 100G FPGA MAC/PCS | VU9P-compatible implementation with confirmed entitlement, reference clocks, lane mapping, FEC, reset sequencing and user-stream interface. |
+| 100GbE QSFP28 host NIC | NVIDIA/Mellanox ConnectX-4 MCX455A-ECAT is one documented candidate. Verify exact SKU, Ethernet mode, firmware, driver and cooling. The baseline X520 is 10G only. |
+| 100G cable or optics | Compatible QSFP28-to-QSFP28 DAC, or matched optical modules and fiber. The baseline 4x10G breakout connection is not the 100G cable. |
+| Suitable replay host | Validate PCIe bandwidth, memory bandwidth, CPU and actual packet rate. The MCX455A-ECAT is documented with PCIe Gen3 x16. Do not assume the baseline PC can generate/capture the target workload. |
+| Wider streaming datapath | Derive width, clock and byte-valid/message-boundary handling from the selected 100G core. Do not assume the initial 32-bit simulation interface is the final MAC interface. |
+
+See the [NVIDIA manufacturer manual][cx4] for the MCX455A-ECAT. ConnectX-4 Lx is not
+an interchangeable 100G candidate. Treat host/NIC/cable/core selection as one integration task.
+
+## Measurement and Research Scope
+
+The application architecture remains Ethernet -> IPv4 -> UDP -> market-data decoding ->
 sequence/state handling -> decision -> risk checks -> simulated order transmission.
-Python and C++ remain test and control components, not a replacement for FPGA RTL.
+Python and C++ provide test/control functions. This BOM update does not implement or
+verify the pipeline.
 
-The KR260 has one SFP+ port. Two logical A/B feeds can share it, with aggregate
-ingress limited to 10 Gb/s. This supports duplicate/gap/reordering experiments,
-but **not two independent physical 10G inputs or independent-link failover**.
-A dual-port NIC in the PC does not change the FPGA's port count. Borrow a suitable
-multi-port FPGA platform later if physical redundancy becomes a research requirement.
+Use the VCU118's additional lanes/cage only after instantiating and validating the
+corresponding logic and external connections. One working lane does not establish
+multi-link redundancy or 100G operation.
 
-Buying a 10G NIC does not prove minimum-frame line-rate replay. Benchmark offered
-packets/s, capture loss, driver settings and CPU limits before drawing conclusions
-about the FPGA. Large-packet TCP throughput is not a tiny-packet UDP test. Native
-Linux on the test PC avoids making Windows/WSL raw-NIC access an unverified premise.
-Ordinary NICs may regenerate FCS and apply offloads: use simulation or suitable lab
-equipment for malformed-FCS testing that the NIC cannot generate.
+Benchmark offered packet rate, capture loss, driver settings and CPU limits. A NIC's
+rated link speed does not prove minimum-frame line-rate replay. Use simulation or
+appropriate lab equipment for malformed-FCS testing that the NIC cannot generate.
 
-Internal counters and ILA can establish precisely defined fabric-cycle timing.
-They cannot by themselves establish calibrated wire-to-wire latency. Borrow a
-hardware traffic generator, timestamp-capable measurement setup or appropriate
-lab instruments for that claim; no such equipment is included in the budget.
-Record clock domains, timing reference points and measurement uncertainty.
+Internal timestamps/counters and ILA establish defined fabric-cycle timing. Calibrated
+wire-to-wire results require an appropriate external measurement setup, defined reference
+points and recorded uncertainty.
 
-## Purchase Timing
+## Next Steps
 
-1. **Now, 0 dollars:** define the 31-byte synthetic protocol behavior; implement
-   the registered decoder; run a self-checking cocotb test and lint. Learn on the
-   existing laptop. Do not wait for a board to start.
-2. **Before ordering the FPGA:** resolve the license path and board clock/pin/IP
-   audit, and ask the advisor about loaner boards, PCs and measurement equipment.
-3. **Board bring-up:** purchase the kit and reader as needed; prove programming,
-   reset and basic debug before adding the full trading pipeline.
-4. **Physical network testing:** obtain the PC/NIC/cable near the link bring-up
-   milestone so their return windows do not expire during months of RTL learning.
-5. **Later, evidence-driven upgrades:** additional capture storage, compatible
-   RAM or lab equipment only when measured needs justify them. No 10G switch,
-   external JTAG pod, oscilloscope purchase, second FPGA, live trading account,
-   motors or sensors are required to start this design.
+1. Confirm access to the VCU118 and inventory power, cooling, USB cables, loopback accessories and tool entitlement.
+2. Agree on the initial link rate, MAC/PCS implementation and user-stream interface.
+3. Continue decoder and streaming-front-end verification on the existing development computer.
+4. Prove board programming and a minimal Ethernet link.
+5. Integrate the parser/decoder and add per-stage timing instrumentation.
+6. Validate the optional 100G equipment and configuration when that extension is selected.
 
 ## Sources
 
-[hp-ports]: https://support.hp.com/gb-en/document/ish_11678529-11678592-16
-[kr260]: https://www.amd.com/en/products/system-on-modules/kria/k26/kr260-robotics-starter-kit.html
-[kr260-dk]: https://www.digikey.com/en/products/detail/amd/SK-KR260-G/16521660
-[box]: https://docs.amd.com/r/en-US/ug1092-kr260-starter-kit/What-s-in-the-Box
-[pc-listing]: https://www.target.com/p/-/A-1004161493
-[pc-slots]: https://www.dell.com/support/manuals/en-us/optiplex-7060-sff/opti_7060_sff_setup_specs_manual/system-board-connectors?guid=guid-a828ebb5-0563-42e5-826a-ed9ee262d30b&lang=en-us
-[nic-listing]: https://www.stikc.com/products/intel-x520-da2-dual-port-10gb-sfp-cna-low-profile
-[dac]: https://www.sfpcables.com/SFP-Cable-CAB-10GSFP-P1M-24?source=10gtekProductPage
+[vcu-kit]: https://www.amd.com/en/products/adaptive-socs-and-fpgas/evaluation-boards/vcu118.html
+[vcu-guide]: https://docs.amd.com/api/khub/documents/Uoc4S9pQd1uve6kiGiG2kA/content
+[vcu-quick]: https://docs.amd.com/api/khub/documents/HoK4yan7ctgxSGOLW0OVng/content
+[vcu-10g]: https://dgway.com/products/IP/TOE10G-IP/dg_toeudp10gip_fpgasetup_xilinx/dg_toeudp10gip_fpgasetup_xilinx.htm
 [intel]: https://www.intel.com/content/www/us/en/support/articles/000005528/ethernet-products/500-series-network-adapters-up-to-10gbe.html
-[peripherals]: https://docs.amd.com/r/en-US/ug1092-kr260-starter-kit/Supported-Peripherals
-[power]: https://docs.amd.com/r/en-US/ug1092-kr260-starter-kit/Powering-the-Starter-Kit-and-Power-Budgets
-[vivado-devices]: https://docs.amd.com/r/2025.1-English/ug973-vivado-release-notes-install-license/Supported-Devices
-[licenses]: https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/licensing-faq.html
+[vivado]: https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/vivado.html
 [ethernet-license]: https://docs.amd.com/r/5.0-English/pg210-25g-ethernet/Ordering-Information
 [open-mac]: https://github.com/alexforencich/verilog-ethernet
 [cocotb]: https://docs.cocotb.org/en/stable/simulator_support.html
+[cx4]: https://networking-docs.nvidia.com/connectx4vpihw/introduction

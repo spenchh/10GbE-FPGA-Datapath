@@ -1,14 +1,16 @@
-item_id,category,item,quantity,unit_usd,price_basis,source_url,notes
-H01,hardware,AMD SK-KR260-G complete starter kit,1,431.02,Observed listing,https://www.digikey.com/en/products/detail/amd/SK-KR260-G/16521660,Recheck delivered price and license path; listed non-returnable
-H02,hardware,Dell OptiPlex 7060 SFF i5-8500 16GB 256GB refurbished,1,299.00,Observed listing example,https://www.target.com/p/-/A-1004161493,Borrow if possible; not Micro; free x16 slot and low-profile NIC clearance
-H03,hardware,Intel X520-DA2 refurbished low-profile NIC,1,29.00,Observed listing,https://www.stikc.com/products/intel-x520-da2-dual-port-10gb-sfp-cna-low-profile,Confirm exact OEM card and return terms; verify Linux driver and DAC
-H04,hardware,10Gtek CAB-10GSFP-P1M-24 passive DAC Intel-compatible option,1,20.90,Displayed vendor listing,https://www.sfpcables.com/SFP-Cable-CAB-10GSFP-P1M-24?source=10gtekProductPage,Requote shipping; complete FPGA pairing untested; no separate optics needed
-H05,accessory,USB-A microSD reader,1,12.00,Planning estimate,,Skip if already owned
-H06,accessory,USB flash drive 16GB or larger for Linux installer,1,10.00,Planning estimate,,Reuse existing drive only after backing up its contents
-H07,accessory,Nonconductive board support and ESD supplies,1,20.00,Planning estimate,,Keep cooling unobstructed
-H08,optional,Spare 32GB microSDHC card,1,10.00,Planning estimate,,Included in total but optional because starter kit contains a card
-R01,reserve,Tax shipping and price contingency,1,100.00,Budget reserve,,Not a checkout quote; do not exceed total budget
-B01,borrow,Initial setup monitor keyboard mouse display cable and screwdriver,1,0.00,Borrow assumed,,If unavailable add actual cost before buying
-I01,included,KR260 power supply fansink microSD USB debug cable and RJ45 cable,1,0.00,Included with complete kit,https://docs.amd.com/r/en-US/ug1092-kr260-starter-kit/What-s-in-the-Box,Verify seller supplies full kit; do not double count
-S01,software,Python pytest cocotb Verilator C++ build tools and waveform viewer,1,0.00,Open-source baseline,https://docs.cocotb.org/en/stable/simulator_support.html,Pin supported released versions; not installed or tested by BOM work
-S02,software,Vivado and Ethernet MAC implementation,1,0.00,Conditional no-paid-license assumption,https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/licensing-faq.html,See BOM.md; paid MAC or tool licenses excluded and could invalidate budget
+item_id,category,item,quantity,source_url,notes
+H01,hardware,AMD EK-U1-VCU118-G VCU118 evaluation kit,1,https://www.amd.com/en/products/adaptive-socs-and-fpgas/evaluation-boards/vcu118.html,Record board revision and installed XCVU9P device; confirm lab/kit access.
+H02,hardware,Linux traffic-generator PC (OptiPlex 7060 SFF or equivalent),1,,"Borrow/use existing host if available. Validate PCIe slot, bracket and airflow for 10G. Not a verified 100G replay host."
+H03,hardware,Intel X520-DA2 10G SFP+ NIC with suitable bracket,1,https://www.intel.com/content/www/us/en/support/articles/000005528/ethernet-products/500-series-network-adapters-up-to-10gbe.html,"Confirm exact OEM card, Linux driver, and breakout cable acceptance. 10G only."
+H04,hardware,1 m passive QSFP+ to 4x10G SFP+ breakout DAC,1,https://dgway.com/products/IP/TOE10G-IP/dg_toeudp10gip_fpgasetup_xilinx/dg_toeudp10gip_fpgasetup_xilinx.htm,Replaces straight SFP+ DAC. Use one leg matched to selected VCU118 GTY lane; validate both endpoints. Not a 100G cable.
+H05,included,USB data cables for VCU118 JTAG and UART,2,https://docs.amd.com/api/khub/documents/HoK4yan7ctgxSGOLW0OVng/content,Two micro-USB data cables. Inventory actual kit. On-board USB JTAG handles baseline programming.
+H06,accessory,USB flash drive 16 GB or larger for Linux installer,1,,Reuse existing media if suitable.
+H07,accessory,Nonconductive board support and ESD supplies,1,,Keep VCU118 cooling unobstructed.
+H08,included,VCU118 QSFP loopback module,1,https://docs.amd.com/api/khub/documents/HoK4yan7ctgxSGOLW0OVng/content,Optional local loopback/debug. Inventory kit. Does not replace cable to host.
+B01,borrow,Initial monitor keyboard mouse display cable and screwdriver,1,,Use available setup peripherals.
+I01,included,Correct VCU118 power supply cooling and management Ethernet cable,1,https://docs.amd.com/api/khub/documents/HoK4yan7ctgxSGOLW0OVng/content,Kit guide shows 180 W supply. Verify correct board-specific power hardware and cooling.
+S01,software,Python pytest cocotb Verilator C++ build tools and waveform viewer,1,https://docs.cocotb.org/en/stable/simulator_support.html,Pin supported released versions. No tool installation or tests performed by this BOM update.
+S02,software,Vivado XCVU9P entitlement and 10G MAC/PCS rights,1,https://www.amd.com/en/products/software/adaptive-socs-and-fpgas/vivado.html,"Validate device support, actual institutional/kit entitlement, tool version and separate Ethernet IP rights."
+U01,optional-100g,100GbE QSFP28 host NIC e.g. MCX455A-ECAT,1,https://networking-docs.nvidia.com/connectx4vpihw/introduction,"Optional 100G extension. Verify exact SKU, Ethernet mode, PCIe Gen3 x16 resources, driver, bracket and airflow. Not ConnectX-4 Lx."
+U02,optional-100g,Compatible 100G QSFP28 DAC or matched optics and fiber,1,,"Optional 100G extension. Validate endpoints, lane mapping, FEC and module power. Replaces 4x10G breakout connection."
+U03,optional-100g,100G-capable replay host and VU9P MAC/PCS implementation,1,,"Optional 100G extension. Verify host packet rate, core interface, clocks and entitlement."
