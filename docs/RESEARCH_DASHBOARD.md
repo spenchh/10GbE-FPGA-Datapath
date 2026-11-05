@@ -1,11 +1,14 @@
-# VCU118 Research · Week 02
+# VCU118 Research Dashboard
 
-[Open the public dashboard](https://vcu118-week-two-spencer.bountifuldish.chatgpt.site)
+[Open the public research hub](https://vcu118-week-two-spencer.bountifuldish.chatgpt.site)
 
-The dashboard source is `docs/index.html`. It is a standalone HTML/CSS/JavaScript page with no build step or external dependencies. Open the file directly, or serve `docs/` with a static server.
+The main page links to separate Week 1 and Week 2 dashboards. Each week contains five milestone days, a visual progress indicator, expandable task details, reasoning prompts, and per-day evidence notes.
 
-The page contains five milestone days, task checklists, parser verification and latency measurement goals, partner responsibilities, and local evidence notes. Progress is stored in the visitor's browser using localStorage; notes and completion states are not committed to this repository or shared between visitors.
+- Week 1: understand the receive path, define the message, build the reference and streaming parser, and review board status.
+- Week 2: verify continuous traffic, measure parser latency, and prepare the hardware handoff.
 
-The Week 1 source-document links require access to the original ChatGPT files.
+Source: `docs/index.html`. This is a standalone HTML/CSS/JavaScript application with no build step or external dependencies. Open it directly or serve `docs/` with a static server. Routes use `#home`, `#week-1`, and `#week-2`.
 
-To also host this on GitHub Pages, choose Settings → Pages → Deploy from a branch → main → /docs → Save. GitHub Pages has not been enabled by this commit.
+Progress and evidence notes are stored separately for each week in the visitor's browser. The existing Week 2 storage key is preserved. Notes and checkmarks are not committed or shared across visitors. The original Week 1 assignment link requires access to the ChatGPT document.
+
+To also host this on GitHub Pages, select Settings → Pages → Deploy from a branch → main → /docs → Save. GitHub Pages has not been enabled by this commit.
