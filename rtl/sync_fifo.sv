@@ -1,3 +1,6 @@
+// ================================
+//        Synchronous FIFO
+// ================================
 module sync_fifo #(
     parameter WIDTH = 64,
     parameter DEPTH = 16
@@ -13,6 +16,7 @@ module sync_fifo #(
     output logic             o_mem_full, // Tells user mem is full
     output logic             o_mem_empty // Tells user mem is empty
 );
+timeunit 1ns / 1ps; // timeunit = 1ns / timeprecision = 1ps
 
 logic [WIDTH-1:0] mem [DEPTH-1:0];  // width = 64, depth 16
 
@@ -27,7 +31,7 @@ logic pop;  // Checks if you can read from memory (!o_mem_empty && i_rd_en)
 assign o_mem_full  = (counter == DEPTH);
 assign o_mem_empty = (counter == 0);
 
-assign push = (!o_mem_full && i_wr_en);
+assign push = (!o_mem_full && i_wr_en) || (o_mem_full && i_wr_en && pop);
 assign pop  = (!o_mem_empty && i_rd_en);
 
 always_ff @(posedge i_clk) begin
