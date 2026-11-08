@@ -1,0 +1,6 @@
+sim_build/
+__pycache__/
+*.py[cod]
+results.xml
+*.vcd
+*.fst

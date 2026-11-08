@@ -6,7 +6,7 @@ from tools.gen_packet import packet_int
 """
 Goal: Prove reset clears decoder correctly
     1. Drive i_rst_n = 0 to assert reset
-    2. Drive i_packet_valid = 0 and i_packet_in = 0
+    2. Drive i_valid = 0 and i_payload = 0
     3. Generate a clock
     4. Wait for a rising edge while reset is low
     5. Use ReadOnly() to wait for output updates
@@ -21,8 +21,8 @@ async def test(dut):
     # drive all four inputs to their starting values
     dut.i_clk.value = 0
     dut.i_rst_n.value = 0
-    dut.i_packet_valid.value = 0
-    dut.i_packet_in.value = 0
+    dut.i_valid.value = 0
+    dut.i_payload.value = 0
 
     clock = Clock(dut.i_clk, 10, unit="ns") # Clock timing
     clock.start(start_high=False)
@@ -32,7 +32,7 @@ async def test(dut):
     await ReadOnly() # Allows NBA region to settle
 
     # Check every output agianst its least expected value
-    assert int(dut.o_decoded_valid.value)   == 0, "decoded_valid did not clear"
+    assert int(dut.o_valid.value)   == 0, "decoded_valid did not clear"
     assert int(dut.o_decode_error.value)    == 0, "decode_error did not clear"
     assert int(dut.o_message_type.value)    == 0, "message_type invalid"
     assert int(dut.o_sequence_number.value) == 0, "sequence_number invalid"
@@ -48,14 +48,14 @@ async def test(dut):
     await FallingEdge(dut.i_clk) # Wait for falling edge to drive inputs
 
     dut.i_rst_n.value        = 1
-    dut.i_packet_in.value    = packet_int
-    dut.i_packet_valid.value = 1
+    dut.i_payload.value    = packet_int
+    dut.i_valid.value = 1
 
     await RisingEdge(dut.i_clk)
     await ReadOnly()
     
     # Check decoded outputs
-    assert int(dut.o_decoded_valid.value)   == 1, "decoded_valid did not assert"
+    assert int(dut.o_valid.value)   == 1, "decoded_valid did not assert"
     assert int(dut.o_decode_error.value)    == 0, "unexpected decode error"
     assert int(dut.o_message_type.value)    == 1, "message_type invalid"
     assert int(dut.o_sequence_number.value) == 42, "sequence_number mismatch"
@@ -68,13 +68,13 @@ async def test(dut):
 
     # IDLE CYCLE CHECK (no new packets)
     await FallingEdge(dut.i_clk)
-    dut.i_packet_valid.value = 0
-    dut.i_packet_in.value    = 0
+    dut.i_valid.value = 0
+    dut.i_payload.value    = 0
 
     await RisingEdge(dut.i_clk)
     await ReadOnly()
     
-    assert int(dut.o_decoded_valid.value)   == 0, "decoded_valid did not clear"   # no new decoded packet
+    assert int(dut.o_valid.value)   == 0, "decoded_valid did not clear"   # no new decoded packet
     assert int(dut.o_decode_error.value)    == 0, "unexpected decode error"       # no packet = no error
     assert int(dut.o_message_type.value)    == 1, "message_type invalid"
     assert int(dut.o_sequence_number.value) == 42, "sequence_number mismatch"
