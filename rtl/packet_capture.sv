@@ -12,23 +12,16 @@ module packet_capture#(
     input logic            rx_axis_tuser,  // AXI4-Stream Sideband interface
     input logic            rx_axis_tlast   // AXI4-Stream End of packet signal
 );
-
+// —— Counter to check how many are valid ——
+    // FCS error occurs
+    // Packet shorter than 64 bytes
+    // Frames of length greater than MTU size programmed are received
+    // Any control frame received not exactly the min frame length
+    // XGMII data stream contains error codes
 
 // —— Counter to check how many are valid ——
 always_comb begin
-    
-
-    if (rx_axis_tvalid) begin
-
-        if (rx_axis_tlast  && rx_axis_tuser) begin // signals bad frame
-            // FCS error occurs
-            // Packet shorter than 64 bytes
-            // Frames of length greater than MTU size programmed are received
-            // Any control frame received not exactly the min frame length
-            // XGMII data stream contains error codes
-        end
-
-    end
+    null;
 end
 
 always_ff @(posedge rx_core_clk) begin
