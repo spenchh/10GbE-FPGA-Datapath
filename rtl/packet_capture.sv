@@ -38,19 +38,19 @@ logic                       RDADDREN;           // Low = Hold, High = set
 logic                       WRADDREN;           // Low = Hold, High = set   
 logic                       SLEEP;
 
-
+assign DO_REG  = 0;                             // BRAM doesn't infer there to not be an output register so set DO_REG to 0
 
 // Clock polarity is posedge
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        foreach (BRAM[i])
-            BRAM[i] <= '0;
-        WRADDR  = '0;                   // initial write pointer
-        RDADDR  = '0;                   // initlal read  pointer
-        SRVAL_A = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
-        SRVAL_B = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
-        DO_REG  = 0;                    // BRAM doesn't infer there to not be an output register so set DO_REG to 0
-
+        RDEN    <=  0;
+        WREN    <=  0;
+        DIN     <= '0;
+        DINP    <= '0;
+        DOUT    <= '0;
+        DOUTP   <= '0;
+        WRADDR  <= '0;                   // initial write pointer
+        RDADDR  <= '0;                   // initlal read  pointer
     end
 end
 
