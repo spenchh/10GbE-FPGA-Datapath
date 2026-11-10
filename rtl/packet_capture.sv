@@ -1,6 +1,6 @@
-// =======================================
-//  Captures packets from Rx MAC outputs
-// =======================================
+// ===================================================
+//  Captures packets from Rx MAC outputs into BRAM
+// ===================================================
 module packet_capture#(
     parameter int BYTE      = 8,
     parameter int DATAWIDTH = 64,
