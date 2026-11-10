@@ -14,12 +14,14 @@ module packet_capture#(
     input logic [BYTE     -1:0] rx_axis_tkeep,  // AXI4-Stream Data control
     input logic                 rx_axis_tvalid, // AXI4-Stream Data valid
     input logic                 rx_axis_tuser,  // AXI4-Stream Sideband interface
-    input logic                 rx_axis_tlast   // AXI4-Stream End of packet signal
+    input logic                 rx_axis_tlast,  // AXI4-Stream End of packet signal
+
+    input logic                 rx_rst_n
 );
 
-// —— BRAM (RAMB36E2) ——
+// —— SDP BRAM (RAMB36E2) ——
 logic [DATAWIDTH+BYTE-1:0]  BRAM [ENTRIES-1:0]; // 64 Data bits + 8 validity bids
-logic                       RDEN;               // Port a Enable
+logic                       RDEN;               // Port a Enable (active-High)
 logic                       WREN;               // Port B Enable (active-High)
 // logic                    REGCEA;             // Register enable (active-High) - optional
 logic                       RSTRAM;             // Forces data output latches to contain value SRVAL
@@ -36,15 +38,20 @@ logic                       RDADDREN;           // Low = Hold, High = set
 logic                       WRADDREN;           // Low = Hold, High = set   
 logic                       SLEEP;
 
-assign WRADDR  = '0;                   // initial write pointer
-assign RDADDR  = '0;                   // initlal read  pointer
-assign SRVAL_A = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
-assign SRVAL_B = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
-assign DO_REG  = 0;                    // BRAM doesn't infer there to not be an output register so set DO_REG to 0
+
 
 // Clock polarity is posedge
 always_ff @(posedge rx_core_clk) begin
+    if (!rx_rst_n) begin
+        foreach (BRAM[i])
+            BRAM[i] <= '0;
+        WRADDR  = '0;                   // initial write pointer
+        RDADDR  = '0;                   // initlal read  pointer
+        SRVAL_A = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
+        SRVAL_B = 36'h0000000000000000; // Specifies the initialization value of the output latches or register when the synchronous reset (RSTREG) is asserted
+        DO_REG  = 0;                    // BRAM doesn't infer there to not be an output register so set DO_REG to 0
 
+    end
 end
 
 endmodule
