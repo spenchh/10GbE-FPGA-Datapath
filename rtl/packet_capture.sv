@@ -20,12 +20,12 @@ module packet_capture#(
 );
 
 // —— SDP BRAM (RAMB36E2) ——
-logic [DATAWIDTH+BYTE-1:0]  BRAM [ENTRIES-1:0]; // 64 Data bits + 8 validity bids
-logic                       RDEN;               // Port a Enable (active-High)
+logic [DATAWIDTH+BYTE-1 :0] BRAM [ENTRIES-1:0]; // 64 Data bits + 8 validity bids
+logic                       RDEN;               // Port A Enable (active-High)
 logic                       WREN;               // Port B Enable (active-High)
-// logic                    REGCEA;             // Register enable (active-High) - optional
+//logic                     REGCEA;             // Register enable (active-High) - optional
 logic                       RSTRAM;             // Forces data output latches to contain value SRVAL
-logic                       DO_REG;             // Optional output register
+//logic                     DO_REG;             // Optional output register
 logic [35               :0] SRVAL_A;            
 logic [35               :0] SRVAL_B;
 logic [$clog2(ENTRIES)-1:0] WRADDR;             // Write pointer
@@ -36,19 +36,49 @@ logic [DATAWIDTH-1      :0] DOUT;
 logic [BYTE-1           :0] DOUTP;              // DOUT Parity
 logic                       RDADDREN;           // Low = Hold, High = set
 logic                       WRADDREN;           // Low = Hold, High = set   
-logic                       SLEEP;
+//logic                     SLEEP;              // Takes two clock cycles to wakeup. 
+
+assign DIN    = rx_axis_tdata;
+assign DINP   = rx_axis_tkeep;
+assign RSTRAM = !rx_rst_n;     
 
 // Clock polarity is posedge
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
         RDEN    <=  0;
         WREN    <=  0;
-        DIN     <= '0;
-        DINP    <= '0;
         DOUT    <= '0;
         DOUTP   <= '0;
         WRADDR  <= '0;                   // initial write pointer
         RDADDR  <= '0;                   // initlal read  pointer
+    end else begin
+        if (rx_axis_tvalid) begin
+
+            // —— Read logic for BRAM ——
+            if (RDEN) begin    
+                {DOUT, DOUTP} <= BRAM[RDADDR];
+
+                if (RDADDREN) begin            // Which address to read from. High = new address, Low = holds prev address
+                    if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
+                        RDADDR <= '0;
+                    else
+                        RDADDR <= RDADDR + 1;
+                end
+            end
+
+            // —— Write logic for BRAM ——
+            if (WREN) begin
+                BRAM[WRADDR] <= {DIN, DINP};
+
+                if (WRADDREN) begin
+                    if (WRADDR == ENTRIES - 1)
+                        WRADDR <= '0;
+                    else
+                        WRADDR <= WRADDR + 1;
+                end
+            end
+
+        end
     end
 end
 
