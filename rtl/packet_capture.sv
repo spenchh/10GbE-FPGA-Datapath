@@ -32,13 +32,11 @@ logic [$clog2(ENTRIES)-1:0] WRADDR;             // Write pointer
 logic [$clog2(ENTRIES)-1:0] RDADDR;             // Read  pointer
 logic [DATAWIDTH-1      :0] DIN;        
 logic [BYTE-1           :0] DINP;               // DIN Parity
-logic [DTATWDITH-1      :0] DOUT;
+logic [DATAWIDTH-1      :0] DOUT;
 logic [BYTE-1           :0] DOUTP;              // DOUT Parity
 logic                       RDADDREN;           // Low = Hold, High = set
 logic                       WRADDREN;           // Low = Hold, High = set   
 logic                       SLEEP;
-
-assign DO_REG  = 0;                             // BRAM doesn't infer there to not be an output register so set DO_REG to 0
 
 // Clock polarity is posedge
 always_ff @(posedge rx_core_clk) begin
