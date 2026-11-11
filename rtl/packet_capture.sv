@@ -34,8 +34,8 @@ logic [DATAWIDTH-1      :0] DIN;
 logic [BYTE-1           :0] DINP;               // DIN Parity
 logic [DATAWIDTH-1      :0] DOUT;
 logic [BYTE-1           :0] DOUTP;              // DOUT Parity
-logic                       RDADDREN;           // Low = Hold, High = set
-logic                       WRADDREN;           // Low = Hold, High = set   
+//logic                       RDADDREN;           // Low = Hold, High = set
+//logic                       WRADDREN;           // Low = Hold, High = set   
 //logic                     SLEEP;              // Takes two clock cycles to wakeup. 
 
 assign DIN    = rx_axis_tdata;
@@ -45,7 +45,7 @@ assign RSTRAM = !rx_rst_n;
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
 enum logic {CAPTURE, INSPECT} control;
 
-logic [DATAWIDTH*BYTE-1:0] counter;
+logic [$clog2(ENTRIES + 1) - 1:0] counter;
 
 // —— Write Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
@@ -58,15 +58,12 @@ always_ff @(posedge rx_core_clk) begin
         if (rx_axis_tvalid) begin
             if (WREN) begin
                 BRAM[WRADDR] <= {DIN, DINP};
-                
-                if (WRADDREN) begin
-                    if (WRADDR == ENTRIES - 1 || WRADDR == 0)
-                        WRADDR  <= '0;
-                        counter <= '0;
-                    else
-                        WRADDR  <= WRADDR  + 1;
-                        counter <= counter + 1;
-                end
+                counter <= counter + 1'b1;
+                WRADDR  <= WRADDR  + 1;
+
+                if (WRADDR == ENTRIES - 1) 
+                    WRADDR  <= '0;
+                    counter <= '0;
             end
         end
     end
@@ -83,13 +80,12 @@ always_ff @(posedge rx_core_clk) begin
         // —— Read logic for BRAM ——
         if (RDEN) begin    
             {DOUT, DOUTP} <= BRAM[RDADDR];
-      
-            if (RDADDREN) begin            // Which address to read from. High = new address, Low = holds prev address
-                if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
-                    RDADDR <= '0;
-                else
-                    RDADDR <= RDADDR + 1;
-            end
+            RDADDR <= RDADDR + 1;
+            
+            if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
+                RDADDR <= '0;
+            else
+                    
         end
     end
 end
@@ -121,7 +117,7 @@ always_ff @(posedge rx_core_clk) begin
     end else begin
         if (rx_axis_tlast & !rx_axis_tuser)
             control <= INSPECT;
-        if (RDADDR == ENTRIES - 1)
+        if (RDADDR == counter - 1)
             control <= CAPTURE;
         
     end
