@@ -26,7 +26,7 @@ logic                       WREN;               // Port B Enable (active-High)
 //logic                     REGCEA;             // Register enable (active-High) - optional
 logic                       RSTRAM;             // Forces data output latches to contain value SRVAL
 //logic                     DO_REG;             // Optional output register
-logic [35               :0] SRVAL_A;            
+logic [35               :0] SRVAL_A; 
 logic [35               :0] SRVAL_B;
 logic [$clog2(ENTRIES)-1:0] WRADDR;             // Write pointer
 logic [$clog2(ENTRIES)-1:0] RDADDR;             // Read  pointer
@@ -42,21 +42,19 @@ assign DIN    = rx_axis_tdata;
 assign DINP   = rx_axis_tkeep;
 assign RSTRAM = !rx_rst_n;
 
-
-type enum logic {CAPTURE, INSPECT};
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
+enum logic {CAPTURE, INSPECT} command;
 
 // —— Write Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        WREN   <=  0;
         WRADDR <= '0;
-    end begin
+    end else begin
         // —— Write logic for BRAM ——
         if (rx_axis_tvalid) begin
             if (WREN) begin
                 BRAM[WRADDR] <= {DIN, DINP};
-
+                
                 if (WRADDREN) begin
                     if (WRADDR == ENTRIES - 1)
                         WRADDR <= '0;
@@ -71,7 +69,6 @@ end
 // —— Read Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        RDEN   <=  0;
         RDADDR <= '0;
         DOUT   <= '0;
         DOUTP  <= '0;
@@ -79,7 +76,7 @@ always_ff @(posedge rx_core_clk) begin
         // —— Read logic for BRAM ——
         if (RDEN) begin    
             {DOUT, DOUTP} <= BRAM[RDADDR];
-
+      
             if (RDADDREN) begin            // Which address to read from. High = new address, Low = holds prev address
                 if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
                     RDADDR <= '0;
@@ -93,6 +90,27 @@ end
 // —— Control: Capture | Inspect Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
+        command <= CAPTURE;
+        WREN    <= 0;
+        RDEN    <= 0;
+    end else begin
+        if (rx_axis_tlast & !rx_axis_tuser)
+            command <= INSPECT;
         
+        command = CAPTURE;
+        case (command)
+            CAPTURE : begin
+                WREN <= 1;
+                RDEN <= 0;
+            end
+      
+            INSPECT : begin
+                WREN <= 0;
+                RDEN <= 1;
+            end
+     
+        endcase;
     end
 end
+
+endmodule
