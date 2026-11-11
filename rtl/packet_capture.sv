@@ -40,33 +40,20 @@ logic                       WRADDREN;           // Low = Hold, High = set
 
 assign DIN    = rx_axis_tdata;
 assign DINP   = rx_axis_tkeep;
-assign RSTRAM = !rx_rst_n;     
+assign RSTRAM = !rx_rst_n;
 
-// Clock polarity is posedge
+
+type enum logic {CAPTURE, INSPECT};
+// NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
+
+// —— Write Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        RDEN    <=  0;
-        WREN    <=  0;
-        DOUT    <= '0;
-        DOUTP   <= '0;
-        WRADDR  <= '0;                   // initial write pointer
-        RDADDR  <= '0;                   // initlal read  pointer
-    end else begin
+        WREN   <=  0;
+        WRADDR <= '0;
+    end begin
+        // —— Write logic for BRAM ——
         if (rx_axis_tvalid) begin
-
-            // —— Read logic for BRAM ——
-            if (RDEN) begin    
-                {DOUT, DOUTP} <= BRAM[RDADDR];
-
-                if (RDADDREN) begin            // Which address to read from. High = new address, Low = holds prev address
-                    if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
-                        RDADDR <= '0;
-                    else
-                        RDADDR <= RDADDR + 1;
-                end
-            end
-
-            // —— Write logic for BRAM ——
             if (WREN) begin
                 BRAM[WRADDR] <= {DIN, DINP};
 
@@ -77,9 +64,35 @@ always_ff @(posedge rx_core_clk) begin
                         WRADDR <= WRADDR + 1;
                 end
             end
-
         end
     end
 end
 
-endmodule
+// —— Read Procedural Block ——
+always_ff @(posedge rx_core_clk) begin
+    if (!rx_rst_n) begin
+        RDEN   <=  0;
+        RDADDR <= '0;
+        DOUT   <= '0;
+        DOUTP  <= '0;
+    end else begin
+        // —— Read logic for BRAM ——
+        if (RDEN) begin    
+            {DOUT, DOUTP} <= BRAM[RDADDR];
+
+            if (RDADDREN) begin            // Which address to read from. High = new address, Low = holds prev address
+                if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
+                    RDADDR <= '0;
+                else
+                    RDADDR <= RDADDR + 1;
+            end
+        end
+    end
+end
+
+// —— Control: Capture | Inspect Procedural Block ——
+always_ff @(posedge rx_core_clk) begin
+    if (!rx_rst_n) begin
+        
+    end
+end
