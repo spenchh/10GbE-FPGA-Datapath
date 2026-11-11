@@ -45,7 +45,7 @@ assign RSTRAM = !rx_rst_n;
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
 enum logic {CAPTURE, INSPECT} control;
 
-logic [$clog2(ENTRIES + 1) - 1:0] counter;
+logic [$clog2(ENTRIES + 1) - 1:0] counter; // Need extra bit for 256
 
 // —— Write Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
@@ -97,12 +97,12 @@ always_comb begin
         RDEN = 0;
     end else begin
         case (control)
-            CAPTURE : begin
+            CAPTURE : begin // Only Write when Frame Capture
                 WREN <= 1;
                 RDEN <= 0;
             end
       
-            INSPECT : begin
+            INSPECT : begin // Only Read when Inspecting Frame
                 WREN <= 0;
                 RDEN <= 1;
             end
@@ -113,11 +113,11 @@ end
 
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        control <= CAPTURE;
+        control <= CAPTURE; // Default Capture to overwrite into bram
     end else begin
-        if (rx_axis_tlast & !rx_axis_tuser)
+        if (rx_axis_tlast & !rx_axis_tuser) // after last packet comes and user is deasserted, switch to read
             control <= INSPECT;
-        if (RDADDR == counter - 1)
+        if (RDADDR == counter - 1)          // if inspect has read all the memory, switch to capture
             control <= CAPTURE;
         
     end
