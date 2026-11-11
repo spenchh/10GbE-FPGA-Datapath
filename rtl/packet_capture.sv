@@ -43,12 +43,16 @@ assign DINP   = rx_axis_tkeep;
 assign RSTRAM = !rx_rst_n;
 
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
-enum logic {CAPTURE, INSPECT} command;
+enum logic {CAPTURE, INSPECT} control;
+
+logic [DATAWIDTH*BYTE-1:0] counter;
 
 // —— Write Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        WRADDR <= '0;
+        WRADDR   <= '0;
+        WRADDREN <=  0;
+        counter  <=  0;
     end else begin
         // —— Write logic for BRAM ——
         if (rx_axis_tvalid) begin
@@ -56,10 +60,12 @@ always_ff @(posedge rx_core_clk) begin
                 BRAM[WRADDR] <= {DIN, DINP};
                 
                 if (WRADDREN) begin
-                    if (WRADDR == ENTRIES - 1)
-                        WRADDR <= '0;
+                    if (WRADDR == ENTRIES - 1 || WRADDR == 0)
+                        WRADDR  <= '0;
+                        counter <= '0;
                     else
-                        WRADDR <= WRADDR + 1;
+                        WRADDR  <= WRADDR  + 1;
+                        counter <= counter + 1;
                 end
             end
         end
@@ -69,9 +75,10 @@ end
 // —— Read Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        RDADDR <= '0;
-        DOUT   <= '0;
-        DOUTP  <= '0;
+        RDADDR   <= '0;
+        RDADDREN <=  0;
+        DOUT     <= '0;
+        DOUTP    <= '0;
     end else begin
         // —— Read logic for BRAM ——
         if (RDEN) begin    
@@ -88,17 +95,12 @@ always_ff @(posedge rx_core_clk) begin
 end
 
 // —— Control: Capture | Inspect Procedural Block ——
-always_ff @(posedge rx_core_clk) begin
+always_comb begin
     if (!rx_rst_n) begin
-        command <= CAPTURE;
-        WREN    <= 0;
-        RDEN    <= 0;
+        WREN = 0;
+        RDEN = 0;
     end else begin
-        if (rx_axis_tlast & !rx_axis_tuser)
-            command <= INSPECT;
-        
-        command = CAPTURE;
-        case (command)
+        case (control)
             CAPTURE : begin
                 WREN <= 1;
                 RDEN <= 0;
@@ -110,6 +112,18 @@ always_ff @(posedge rx_core_clk) begin
             end
      
         endcase;
+    end
+end
+
+always_ff @(posedge rx_core_clk) begin
+    if (!rx_rst_n) begin
+        control <= CAPTURE;
+    end else begin
+        if (rx_axis_tlast & !rx_axis_tuser)
+            control <= INSPECT;
+        if (RDADDR == ENTRIES - 1)
+            control <= CAPTURE;
+        
     end
 end
 
