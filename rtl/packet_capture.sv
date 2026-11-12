@@ -61,9 +61,10 @@ always_ff @(posedge rx_core_clk) begin
                 counter <= counter + 1'b1;
                 WRADDR  <= WRADDR  + 1;
 
-                if (WRADDR == ENTRIES - 1) 
+                if (WRADDR == ENTRIES - 1) begin
                     WRADDR  <= '0;
                     counter <= '0;
+                end
             end
         end
     end
@@ -82,10 +83,8 @@ always_ff @(posedge rx_core_clk) begin
             {DOUT, DOUTP} <= BRAM[RDADDR];
             RDADDR <= RDADDR + 1;
             
-            if (RDADDR == ENTRIES - 1) // can you &RDADDR aswell to check if it reached last entry
+            if (RDADDR == ENTRIES - 1) // can use &RDADDR aswell to check if it reached last entry
                 RDADDR <= '0;
-            else
-                    
         end
     end
 end
