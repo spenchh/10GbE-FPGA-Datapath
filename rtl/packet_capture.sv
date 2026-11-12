@@ -51,7 +51,6 @@ logic [$clog2(ENTRIES + 1) - 1:0] counter; // Need extra bit for 256
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
         WRADDR   <= '0;
-        WRADDREN <=  0;
         counter  <=  0;
     end else begin
         // —— Write logic for BRAM ——
@@ -70,11 +69,15 @@ always_ff @(posedge rx_core_clk) begin
     end
 end
 
+// TODO:
+// - Check validity of data before reading from BRAM
+// - DOUTP not necessary for output??? remove remove
+// - output a 8 byte DOUT that has 0's for the invalid bytes based on DINP
+
 // —— Read Procedural Block ——
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
         RDADDR   <= '0;
-        RDADDREN <=  0;
         DOUT     <= '0;
         DOUTP    <= '0;
     end else begin
