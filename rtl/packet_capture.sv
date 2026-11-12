@@ -1,6 +1,6 @@
-// ===================================================
-//  Captures packets from Rx MAC outputs into BRAM
-// ===================================================
+// =====================================================
+//  Captures packets from Rx MAC outputs into SDP BRAM
+// =====================================================
 module packet_capture#(
     parameter int BYTE      = 8,
     parameter int DATAWIDTH = 64,
@@ -33,7 +33,7 @@ logic [$clog2(ENTRIES)-1:0] RDADDR;             // Read  pointer
 logic [DATAWIDTH-1      :0] DIN;        
 logic [BYTE-1           :0] DINP;               // DIN Parity
 logic [DATAWIDTH-1      :0] DOUT;
-logic [BYTE-1           :0] DOUTP;              // DOUT Parity
+//logic [BYTE-1           :0] DOUTP;              // DOUT Parity
 //logic                       RDADDREN;           // Low = Hold, High = set
 //logic                       WRADDREN;           // Low = Hold, High = set   
 //logic                     SLEEP;              // Takes two clock cycles to wakeup. 
@@ -55,7 +55,7 @@ always_ff @(posedge rx_core_clk) begin
     end else begin
         // —— Write logic for BRAM ——
         if (rx_axis_tvalid) begin
-            if (WREN) begin
+            if (WREN && !CAPTURE) begin
                 BRAM[WRADDR] <= {DIN, DINP};
                 counter <= counter + 1'b1;
                 WRADDR  <= WRADDR  + 1;
@@ -75,19 +75,43 @@ end
 // - output a 8 byte DOUT that has 0's for the invalid bytes based on DINP
 
 // —— Read Procedural Block ——
+logic [$clog2(BYTE)-1:0] rx_index;     // index through DINP to read data in BRAM
+int i;
+int j;
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        RDADDR   <= '0;
-        DOUT     <= '0;
-        DOUTP    <= '0;
+        RDADDR     <= '0;
+        DOUT       <= '0;
+        rx_index   <= '0;
+        i          <= '0;
+        j          <= 32'd8;
     end else begin
         // —— Read logic for BRAM ——
-        if (RDEN) begin    
-            {DOUT, DOUTP} <= BRAM[RDADDR];
-            RDADDR <= RDADDR + 1;
+        if (RDEN && INSPECT) begin
             
-            if (RDADDR == ENTRIES - 1) // can use &RDADDR aswell to check if it reached last entry
-                RDADDR <= '0;
+            if (RDADDR == counter - 1 && rx_index == 7) begin // If read everything in BRAM, reset
+                RDADDR     <= '0;
+                rx_index   <= '0;
+                i          <= '0;
+                j          <= 32'd8;
+            end else begin
+                if(rx_index == 7) begin // if reached last index in tkeep, check next tkeep lane
+                    RDADDR   <= RDADDR + 1'b1;
+                    rx_index <= '0;
+                    i        <= '0;
+                    j        <=  32'd8;
+                end else begin
+                    rx_index <= rx_index + 1'b1;
+                    i        <= i + 32'd8;
+                    j        <= j + 32'd8;
+                end
+            end
+
+            if (BRAM[RDADDR][rx_index]) begin
+                DOUT[i +: 8] <= BRAM[RDADDR][j +: 8]; // increment using part select
+            end else begin
+                DOUT[i +: 8] <= 8'd0;                 // invalid lanes put 0's in out
+            end
         end
     end
 end
@@ -100,13 +124,13 @@ always_comb begin
     end else begin
         case (control)
             CAPTURE : begin // Only Write when Frame Capture
-                WREN <= 1;
-                RDEN <= 0;
+                WREN = 1;
+                RDEN = 0;
             end
       
             INSPECT : begin // Only Read when Inspecting Frame
-                WREN <= 0;
-                RDEN <= 1;
+                WREN = 0;
+                RDEN = 1;
             end
      
         endcase;
@@ -117,9 +141,9 @@ always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
         control <= CAPTURE; // Default Capture to overwrite into bram
     end else begin
-        if (rx_axis_tlast & !rx_axis_tuser) // after last packet comes and user is deasserted, switch to read
+        if (control == CAPTURE && rx_axis_tlast & !rx_axis_tuser) // after last packet comes and user is deasserted, switch to read
             control <= INSPECT;
-        if (RDADDR == counter - 1)          // if inspect has read all the memory, switch to capture
+        if (control == INSPECT && RDADDR == counter - 1 && rx_index == BYTE - 1) // if inspect has read all the memory, switch to capture
             control <= CAPTURE;
         
     end
