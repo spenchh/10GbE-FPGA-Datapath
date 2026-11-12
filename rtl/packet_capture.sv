@@ -64,7 +64,12 @@ always_ff @(posedge rx_core_clk) begin
                     WRADDR  <= '0;
                     counter <= '0;
                 end
-            end
+            end 
+        end 
+
+        if (control == INSPECT && RDADDR == counter - 1 && rx_index == BYTE - 1) begin
+            WRADDR  <= '0;
+            counter <= '0;
         end
     end
 end
@@ -77,7 +82,7 @@ end
 // —— Read Procedural Block ——
 logic [$clog2(BYTE)-1:0] rx_index;     // index through DINP to read data in BRAM
 int i;
-int j;
+int j = 32'd8;
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
         RDADDR     <= '0;
@@ -88,25 +93,21 @@ always_ff @(posedge rx_core_clk) begin
     end else begin
         // —— Read logic for BRAM ——
         if (RDEN && INSPECT) begin
-            
-            if (RDADDR == counter - 1 && rx_index == 7) begin // If read everything in BRAM, reset
-                RDADDR     <= '0;
+            if(rx_index == 7) begin
                 rx_index   <= '0;
                 i          <= '0;
                 j          <= 32'd8;
-            end else begin
-                if(rx_index == 7) begin // if reached last index in tkeep, check next tkeep lane
-                    RDADDR   <= RDADDR + 1'b1;
-                    rx_index <= '0;
-                    i        <= '0;
-                    j        <=  32'd8;
+                if (RDADDR == counter - 1) begin  // If read everything in BRAM, reset
+                    RDADDR     <= '0;
                 end else begin
-                    rx_index <= rx_index + 1'b1;
-                    i        <= i + 32'd8;
-                    j        <= j + 32'd8;
+                    RDADDR   <= RDADDR + 1'b1;
                 end
+            end else begin
+                rx_index <= rx_index + 1'b1;
+                i        <= i + 32'd8;
+                j        <= j + 32'd8;
             end
-
+                
             if (BRAM[RDADDR][rx_index]) begin
                 DOUT[i +: 8] <= BRAM[RDADDR][j +: 8]; // increment using part select
             end else begin
