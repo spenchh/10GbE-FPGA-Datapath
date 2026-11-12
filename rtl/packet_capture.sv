@@ -133,7 +133,6 @@ always_comb begin
                 WREN = 0;
                 RDEN = 1;
             end
-     
         endcase;
     end
 end
@@ -146,7 +145,6 @@ always_ff @(posedge rx_core_clk) begin
             control <= INSPECT;
         if (control == INSPECT && RDADDR == counter - 1 && rx_index == BYTE - 1) // if inspect has read all the memory, switch to capture
             control <= CAPTURE;
-        
     end
 end
 
