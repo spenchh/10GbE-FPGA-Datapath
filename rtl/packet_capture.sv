@@ -6,6 +6,7 @@ module packet_capture#(
     parameter int DATAWIDTH = 64,
     parameter int ENTRIES   = 256
 )(
+    // 156.25 MHz for 64-bit 10G
     input logic                 rx_core_clk,    // Clock controls RXAXI, bram - RDCLK, bram - WRCLK
 //  input logic                 RDCLK,          // Port A
 //  input logic                 WRCLK,          // Port B
