@@ -82,39 +82,49 @@ end
 
 // —— Read Procedural Block ——
 logic [$clog2(BYTE)-1:0] rx_index;     // index through DINP to read data in BRAM
-int i;
+logic [DATAWIDTH   -1:0] dout_comb;
+int i = '0;
 int j = 32'd8;
-always_ff @(posedge rx_core_clk) begin
+
+always_comb begin
     if (!rx_rst_n) begin
-        RDADDR     <= '0;
-        DOUT       <= '0;
-        rx_index   <= '0;
-        i          <= '0;
-        j          <= 32'd8;
+        RDADDR     = '0;
+        rx_index   = '0;
+        i          = '0;
+        j          = 32'd8;
     end else begin
-        // —— Read logic for BRAM ——
+        // Read logic for BRAM
         if (RDEN && INSPECT) begin
             if(rx_index == 7) begin
-                rx_index   <= '0;
-                i          <= '0;
-                j          <= 32'd8;
+                rx_index   = '0;
+                i          = '0;
+                j          = 32'd8;
                 if (RDADDR == counter - 1) begin  // If read everything in BRAM, reset
-                    RDADDR     <= '0;
+                    RDADDR     = '0;
                 end else begin
-                    RDADDR   <= RDADDR + 1'b1;
+                    RDADDR   = RDADDR + 1'b1;
                 end
             end else begin
-                rx_index <= rx_index + 1'b1;
-                i        <= i + 32'd8;
-                j        <= j + 32'd8;
+                rx_index = rx_index + 1'b1;
+                i        = i + 32'd8;
+                j        = j + 32'd8;
             end
                 
             if (BRAM[RDADDR][rx_index]) begin
-                DOUT[i +: 8] <= BRAM[RDADDR][j +: 8]; // increment using part select
+                dout_comb[i +: 8] = BRAM[RDADDR][j +: 8]; // increment using part select
             end else begin
-                DOUT[i +: 8] <= 8'd0;                 // invalid lanes put 0's in out
+                dout_comb[i +: 8] = 8'd0;                 // invalid lanes put 0's in out
             end
         end
+    end
+end
+
+always_ff @(posedge rx_core_clk) begin // BRAM read clocked for inferred BRAM
+    if (!rx_rst_n) begin
+        DOUT       <= '0;
+    end else begin
+        // —— Read logic for BRAM ——
+        DOUT <= dout_comb;
     end
 end
 
