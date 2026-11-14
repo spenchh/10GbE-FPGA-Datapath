@@ -93,7 +93,4 @@ module packet_capture_tb;
         $display("PASS: reset, three-word readback, and rearm");
         $finish;
     end
-
-    
-
 endmodule
