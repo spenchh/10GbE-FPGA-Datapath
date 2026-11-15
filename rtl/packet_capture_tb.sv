@@ -4,13 +4,13 @@ module packet_capture_tb;
     localparam int DATAWIDTH = 64;
     localparam int BYTE      = DATAWIDTH / 8;
 
-    logic                clk = 1'b0;
-    logic                rx_rst_n;
+    logic                 clk = 1'b0;
+    logic                 rx_rst_n;
     logic [DATAWIDTH-1:0] rx_axis_tdata;
     logic [BYTE-1:0]      rx_axis_tkeep;
-    logic                rx_axis_tvalid;
-    logic                rx_axis_tuser;
-    logic                rx_axis_tlast;
+    logic                 rx_axis_tvalid;
+    logic                 rx_axis_tuser;
+    logic                 rx_axis_tlast;
 
     packet_capture dut (.rx_core_clk(clk), .*);
 
