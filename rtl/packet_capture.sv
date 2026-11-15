@@ -84,6 +84,7 @@ end
 logic [DATAWIDTH+BYTE-1:0] read_word;    // BRAM word we're currently iterating through
 logic [DATAWIDTH     -1:0] dout_comb;    // dout of comb
 logic                      read_valid;
+logic                      parse_valid;  // for ethernet parse module
 int rx_index;                            // index through DIN bits
 int i;                                   // 2 state, 32 bit
 
@@ -99,10 +100,11 @@ end
 
 always_ff @(posedge rx_core_clk) begin
     if (!rx_rst_n) begin
-        RDADDR     <= '0;
-        DOUT       <= '0;
-        read_word  <= '0;
-        read_valid <=  0;
+        RDADDR      <= '0;
+        DOUT        <= '0;
+        read_word   <= '0;
+        read_valid  <=  0;
+        parse_valid <=  0;
     end else begin
         // —— Read logic for BRAM ——
         if (RDEN) begin
@@ -115,11 +117,11 @@ always_ff @(posedge rx_core_clk) begin
             read_word  <= BRAM[RDADDR];
             
         end
-
-        read_valid <= RDEN; // buffer the RDEN signal so that you catch it going low one cycle late
-        if (read_valid)
+        parse_valid <= read_valid;
+        read_valid  <= RDEN; // buffer the RDEN signal so that you catch it going low one cycle late
+        if (read_valid) 
             DOUT <= dout_comb;
-
+        
     end
 end
 
