@@ -1,96 +1,102 @@
 module packet_capture_tb;
     timeunit 1ns / 1ps;
 
-    constant DATAWIDTH = 64;
-    constant BYTE      =  8;
-    
-    logic                 clk = 0;
-    logic                 rx_rst_n;
+    localparam int DATAWIDTH = 64;
+    localparam int BYTE      = DATAWIDTH / 8;
 
-    logic [DATAWIDTH-1:0] rx_axis_tdata;  // AXI4-Stream Data
-    logic [BYTE     -1:0] rx_axis_tkeep;  // AXI4-Stream Data control
-    logic                 rx_axis_tvalid; // AXI4-Stream Data valid
-    logic                 rx_axis_tuser;  // AXI4-Stream Sideband interface
-    logic                 rx_axis_tlast;  // AXI4-Stream End of packet signal
-  
+    logic                clk = 1'b0;
+    logic                rx_rst_n;
+    logic [DATAWIDTH-1:0] rx_axis_tdata;
+    logic [BYTE-1:0]      rx_axis_tkeep;
+    logic                rx_axis_tvalid;
+    logic                rx_axis_tuser;
+    logic                rx_axis_tlast;
+
     packet_capture dut (.rx_core_clk(clk), .*);
 
     always #3.2 clk = ~clk;
 
-    initial begin
-        @(negedge clk); // Drive stimulus on negedge bc of duty cycle
-        rx_rst_n = 0;
-        rx_axis_tdata = '0;
-        rx_axis_tkeep = '0;
-        rx_axis_tvalid = 0;
-        rx_axis_tuser = 0;
-        rx_axis_tlast = 0;
-        
-        @(posedge clk); #1ps;
-        if (dut.WRADDR !== '0)
-            $fatal(1, "Reset didn't clear write address");
-        if (dut.counter !== '0)
-            $fatal(1, "Reset didn't clear counter");
-        if (dut.RDADDR !== '0)
-            $fatal(1, "Reset didn't clear RDADDR");
-        if (dut.DOUT   !== '0)
-            $fatal(1, "Reset didn't clear DOUT");
-        if (dut.rx_index !== '0)
-            $fatal(1, "Reset didn't clear rx_index");
-        if (dut.i != '0 || dut.j != 32'd8)
-            $fatal(1, "Problem with either i or j");
-        if (dut.WREN !== 0 || dut.RDEN !== 0)
-            $fatal(1, "Problem with capture control");
-        if (dut.control != CAPTURE)
-            $fatal(1, "control didn't reset correctly");
-        
-        @(negedge clk);
-        rx_rst_n = 1;
-        // Transfer 1: eight valid bytes.
+    // Call on a falling edge. The DUT samples this beat on the next rising edge.
+    task automatic send_beat(
+        input logic [DATAWIDTH-1:0] data,
+        input logic [BYTE-1:0] keep,
+        input logic last
+    );
+        rx_axis_tdata  = data;
+        rx_axis_tkeep  = keep;
+        rx_axis_tlast  = last;
         rx_axis_tvalid = 1'b1;
-        rx_axis_tuser  = 1'b0;
-        rx_axis_tlast  = 1'b0;
-        rx_axis_tkeep  = 8'hFF;
-        rx_axis_tdata  = 64'h8877_6655_4433_2211;
-
-        
-        // Transfer 2: eight more valid bytes.
         @(negedge clk);
-        rx_axis_tdata  = 64'hFFEE_DDCC_BBAA_9988;
+    endtask
 
-        // Transfer 3: three valid bytes, end of a good frame.
-        @(negedge clk);
-        rx_axis_tdata  = 64'hFFEE_DDCC_BBAA_1234;
-        rx_axis_tkeep  = 8'h07;
-        rx_axis_tlast  = 1'b1;
-
-        // Return the simulated MAC to idle.
-        @(negedge clk);
-        rx_axis_tvalid = 1'b0;
-        rx_axis_tlast  = 1'b0;
-        rx_axis_tkeep  = '0;
+    task automatic idle_rx();
         rx_axis_tdata  = '0;
+        rx_axis_tkeep  = '0;
+        rx_axis_tlast  = 1'b0;
+        rx_axis_tvalid = 1'b0;
+        rx_axis_tuser  = 1'b0;
+    endtask
+
+    task automatic check_word(input int beat, input logic [DATAWIDTH-1:0] expected);
+        if (dut.DOUT !== expected)
+            $fatal(1, "Readback beat %0d: expected %h, got %h", beat, expected, dut.DOUT);
+    endtask
+
+    task automatic check_rearmed();
+        if ({dut.WREN, dut.RDEN} !== 2'b10 ||
+            dut.WRADDR !== '0 || dut.RDADDR !== '0 || dut.counter !== '0)
+            $fatal(1, "Capture did not rearm after the final BRAM fetch");
+    endtask
+
+    initial begin
+        rx_rst_n = 1'b0;
+        idle_rx();
+
+        @(negedge clk);
+        if ({dut.WREN, dut.RDEN, dut.read_valid} !== 3'b000 ||
+            dut.WRADDR !== '0 || dut.RDADDR !== '0 ||
+            dut.counter !== '0 || dut.DOUT !== '0)
+            $fatal(1, "Reset did not clear capture state");
+
+        rx_rst_n = 1'b1;
+        @(negedge clk);
+        check_rearmed();
+
+        // Three MAC-interface beats, with only three valid bytes in the last beat.
+        send_beat(64'h8877_6655_4433_2211, 8'hFF, 1'b0);
+        send_beat(64'hFFEE_DDCC_BBAA_9988, 8'hFF, 1'b0);
+        send_beat(64'hFFEE_DDCC_BBAA_1234, 8'h07, 1'b1);
+        idle_rx();
 
         if (dut.counter !== 9'd3 || dut.RDEN !== 1'b1)
-        $fatal(1, "Expected three captured words and inspection enabled");
+            $fatal(1, "Expected three stored beats and inspection enabled");
 
-        repeat (8) @(negedge clk);
-        if (dut.DOUT !== 64'h8877_6655_4433_2211)
-            $fatal(1, "Word 0 mismatch: got %h", dut.DOUT);
+        @(negedge clk); // Fetch beat 0. DOUT still holds its reset value.
+        if (dut.read_valid !== 1'b1 || dut.DOUT !== '0)
+            $fatal(1, "First BRAM fetch did not align with the output pipeline");
 
-        repeat (8) @(negedge clk);
-        if (dut.DOUT !== 64'hFFEE_DDCC_BBAA_9988)
-            $fatal(1, "Word 1 mismatch: got %h", dut.DOUT);
+        @(negedge clk); // Two clocks after accepting the final RX beat.
+        check_word(0, 64'h8877_6655_4433_2211);
 
-        repeat (8) @(negedge clk);
-        if (dut.DOUT !== 64'h0000_0000_00AA_1234)
-            $fatal(1, "Word 2 mismatch: got %h", dut.DOUT);
+        @(negedge clk); // Fetch beat 2 while beat 1 reaches DOUT.
+        check_word(1, 64'hFFEE_DDCC_BBAA_9988);
+        check_rearmed();
+        if (dut.read_valid !== 1'b1)
+            $fatal(1, "Final fetched beat is missing its valid flag");
 
-        if (dut.WREN !== 1'b1 || dut.RDEN !== 1'b0 ||
-            dut.WRADDR !== '0 || dut.RDADDR !== '0 || dut.counter !== '0)
-            $fatal(1, "Capture did not rearm after the final word");
+        @(negedge clk); // The final beat reaches DOUT with RDEN already low.
+        check_word(2, 64'h0000_0000_00AA_1234);
+        if ({dut.RDEN, dut.read_valid} !== 2'b00)
+            $fatal(1, "The read pipeline did not drain");
 
-        $display("PASS: reset, three-word readback, and rearm");
+        // Send a distinct frame without resetting to catch stale readback.
+        send_beat(64'h0123_4567_89AB_CDEF, 8'hFF, 1'b1);
+        idle_rx();
+        repeat (2) @(negedge clk);
+        check_word(0, 64'h0123_4567_89AB_CDEF);
+        check_rearmed();
+
+        $display("PASS: reset, pipelined readback, byte masking, and two captures without reset");
         $finish;
     end
 endmodule

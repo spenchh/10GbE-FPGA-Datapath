@@ -68,7 +68,7 @@ always_ff @(posedge rx_core_clk) begin
             end 
         end 
 
-        if (control == INSPECT && RDADDR == counter - 1 && rx_index == BYTE - 1) begin
+        if (control == INSPECT && RDADDR == counter - 1) begin
             WRADDR  <= '0;
             counter <= '0;
         end
@@ -116,8 +116,8 @@ always_ff @(posedge rx_core_clk) begin
             
         end
 
-        read_word <= RDEN; // buffer the RDEN signal so that you catch it going low one cycle late
-        if (read_word)
+        read_valid <= RDEN; // buffer the RDEN signal so that you catch it going low one cycle late
+        if (read_valid)
             DOUT <= dout_comb;
 
     end
@@ -149,7 +149,7 @@ always_ff @(posedge rx_core_clk) begin
     end else begin
         if (control == CAPTURE && rx_axis_tlast & !rx_axis_tuser) // after last packet comes and user is deasserted, switch to read
             control <= INSPECT;
-        if (control == INSPECT && RDADDR == counter - 1 && rx_index == BYTE - 1) // if inspect has read all the memory, switch to capture
+        if (control == INSPECT && RDADDR == counter - 1) // if inspect has read all the memory, switch to capture
             control <= CAPTURE;
     end
 end
