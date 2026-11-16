@@ -1,13 +1,12 @@
 // =====================================================
 //  Captures packets from Rx MAC outputs into SDP BRAM
 // =====================================================
-module packet_capture#(
-    parameter int BYTE      = 8,
-    parameter int DATAWIDTH = 64,
-    parameter int ENTRIES   = 256
-)(
+import ethernet_pkg::*;     // wildcard import ethernet_pkg
+
+module packet_capture(
     // 156.25 MHz for 64-bit 10G
     input logic                 rx_core_clk,    // Clock controls RXAXI, bram - RDCLK, bram - WRCLK
+    input logic                 rx_rst_n,
 //  input logic                 RDCLK,          // Port A
 //  input logic                 WRCLK,          // Port B
 
@@ -17,7 +16,8 @@ module packet_capture#(
     input logic                 rx_axis_tuser,  // AXI4-Stream Sideband interface
     input logic                 rx_axis_tlast,  // AXI4-Stream End of packet signal
 
-    input logic                 rx_rst_n
+    output logic [DATAWIDTH-1:0] DOUT
+
 );
 
 // —— SDP BRAM (RAMB36E2) ——
@@ -33,7 +33,6 @@ logic [$clog2(ENTRIES)-1:0] WRADDR;             // Write pointer
 logic [$clog2(ENTRIES)-1:0] RDADDR;             // Read  pointer
 logic [DATAWIDTH-1      :0] DIN;        
 logic [BYTE-1           :0] DINP;               // DIN Parity
-logic [DATAWIDTH-1      :0] DOUT;
 //logic [BYTE-1           :0] DOUTP;              // DOUT Parity
 //logic                       RDADDREN;           // Low = Hold, High = set
 //logic                       WRADDREN;           // Low = Hold, High = set   
@@ -44,7 +43,7 @@ assign DINP   = rx_axis_tkeep;
 assign RSTRAM = !rx_rst_n;
 
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
-enum logic {CAPTURE, INSPECT} control;
+control_t control;
 
 logic [$clog2(ENTRIES + 1) - 1:0] counter; // Need extra bit for 256
 
