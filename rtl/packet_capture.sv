@@ -74,7 +74,6 @@ always_ff @(posedge rx_core_clk) begin
     end
 end
 
-// TODO:
 // - Check validity of data before reading from BRAM
 // - DOUTP not necessary for output??? remove remove
 // - output a 8 byte DOUT that has 0's for the invalid bytes based on DINP
