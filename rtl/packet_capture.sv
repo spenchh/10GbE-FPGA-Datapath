@@ -20,6 +20,11 @@ module packet_capture(
 
 );
 
+// ====================================
+// untethical to make these all caps
+// ====================================
+
+
 // —— SDP BRAM (RAMB36E2) ——
 logic [DATAWIDTH+BYTE-1 :0] BRAM [ENTRIES-1:0]; // 64 Data bits + 8 validity bids
 logic                       RDEN;               // Port A Enable (active-High)
@@ -43,7 +48,7 @@ assign DINP   = rx_axis_tkeep;
 assign RSTRAM = !rx_rst_n;
 
 // NOTE: Capture, then Insepct. (Write to mem first, then Inspect from mem)
-control_t control;
+packet_control_t control;
 
 logic [$clog2(ENTRIES + 1) - 1:0] counter; // Need extra bit for 256
 

@@ -5,12 +5,13 @@ module ethernet_parser(
     input i_packet
 );
 
-logic [(BYTE*6)-1:0] DST_ADDR;
-logic [(BYTE*6)-1:0] SRC_ADDR;
-logic [(BYTE*2)-1:0] LEN_TYPE;
+logic [(BYTE*6)-1:0] dst_addr;
+logic [(BYTE*6)-1:0] src_addr;
+logic [(BYTE*2)-1:0] len_type;
+logic [(BYTE*1500)-1:0] data;
+logic [(BYTE*46)  -1:0] pad; // ensures frame length is at least 64 bytes
+logic [(BYTE*4)   -1:0] fcs;
 
-
-enum logic {LENGTH, TYPE} e_control; // controls wither LEN_TYPE is length or type
-logic []
-
+parse_control_t control;
+state_control_t state;
 endmodule
