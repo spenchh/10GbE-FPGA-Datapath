@@ -5,18 +5,19 @@ import ethernet_pkg::*;     // wildcard import ethernet_pkg
 
 module packet_capture(
     // 156.25 MHz for 64-bit 10G
-    input logic                 rx_core_clk,    // Clock controls RXAXI, bram - RDCLK, bram - WRCLK
-    input logic                 rx_rst_n,
-//  input logic                 RDCLK,          // Port A
-//  input logic                 WRCLK,          // Port B
+    input logic                  rx_core_clk,    // Clock controls RXAXI, bram - RDCLK, bram - WRCLK
+    input logic                  rx_rst_n,
+//  input logic                  RDCLK,          // Port A
+//  input logic                  WRCLK,          // Port B
 
-    input logic [DATAWIDTH-1:0] rx_axis_tdata,  // AXI4-Stream Data
-    input logic [BYTE     -1:0] rx_axis_tkeep,  // AXI4-Stream Data control
-    input logic                 rx_axis_tvalid, // AXI4-Stream Data valid
-    input logic                 rx_axis_tuser,  // AXI4-Stream Sideband interface
-    input logic                 rx_axis_tlast,  // AXI4-Stream End of packet signal
+    input logic [DATAWIDTH-1:0]  rx_axis_tdata,  // AXI4-Stream Data
+    input logic [BYTE     -1:0]  rx_axis_tkeep,  // AXI4-Stream Data control
+    input logic                  rx_axis_tvalid, // AXI4-Stream Data valid
+    input logic                  rx_axis_tuser,  // AXI4-Stream Sideband interface
+    input logic                  rx_axis_tlast,  // AXI4-Stream End of packet signal
 
-    output logic [DATAWIDTH-1:0] DOUT
+    output logic [DATAWIDTH-1:0] DOUT,
+    output logic                 parse_valid    // for ethernet parse module
 
 );
 
@@ -87,7 +88,6 @@ end
 logic [DATAWIDTH+BYTE-1:0] read_word;    // BRAM word we're currently iterating through
 logic [DATAWIDTH     -1:0] dout_comb;    // dout of comb
 logic                      read_valid;
-logic                      parse_valid;  // for ethernet parse module
 int rx_index;                            // index through DIN bits
 int i;                                   // 2 state, 32 bit
 

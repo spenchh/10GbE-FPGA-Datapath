@@ -2,7 +2,8 @@ import ethernet_pkg::*;
 module ethernet_parser(
     input i_clk,
     input i_rst_n,
-    input i_packet
+    input [DATA_WIDTH-1:0] i_packet,
+    input                  i_parse_valid
 );
 
 typedef struct packed {
@@ -20,7 +21,7 @@ frame_t frame;
 
 localparam int FRAME_BYTES = $bits(frame) / BYTE;
 
-int counter;
+logic [$clog2(1522)-1:0] counter;
 
 always_comb begin
 
@@ -31,6 +32,9 @@ always_ff @(posedge i_clk) begin
         counter <= 0;
         state   <= DST_ADDR;
     end else begin
+        counter <= counter + 1;
+        frame.state <= i_packet[7:0];
+        i_packet << '7;
         case (state)
             DST_ADDR : begin
                 state <= (counter == 5) ? SRC_ADDR : DST_ADDR;
@@ -46,8 +50,8 @@ always_ff @(posedge i_clk) begin
 
             // Draw state machine 
 
-            
-        endcase;
+
+        endcase
     end
 end
 
